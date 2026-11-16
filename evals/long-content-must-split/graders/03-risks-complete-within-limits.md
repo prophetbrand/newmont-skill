@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-All seven risks and their mitigations are present on a lead-in list page (or two), within the skill's limit of four items per column, never as a table.
+All seven risks and their mitigations are present, on a comparison layout (`Two/Three Column Comparison`) or a table layout, split across slides of the same layout when they exceed its limit; no overflowing or cramped slide.

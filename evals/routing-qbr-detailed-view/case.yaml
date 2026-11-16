@@ -1,0 +1,13 @@
+schema_version: "1.1"
+name: routing-qbr-detailed-view
+expected_outcome: |
+  An indirect request ("put this into slides for the QBR") with the content, deck name and date
+  given. The router matches the QBR cue, so the run asks no template question and builds on
+  Detailed View; the reply opens with Detailed View and the router's reason (QBR) and quotes the
+  source versions. Slides use Detailed View layouts: a `1_Cover slide Opt 1b` cover, the figures
+  on `ScoreCard Tables`, `Key Metrics`, `Overall Highlights` or `Financial Performance (full
+  Portfolio)`, the highlights and risks on `Highlights, Risks & Mitigations`, `Overall
+  Highlights` or `Quarterly Performance`, and `Thank you Opt 1`; no free-form slide. Every figure
+  is as given and none is added. q3-qbr.pptx.run.json records template detailed_view, the
+  sources, layouts_used and activation path `indirect: put into slides`; the checker passes with
+  --template detailed_view.

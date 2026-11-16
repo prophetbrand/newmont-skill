@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: missing-source-stops
+expected_outcome: |
+  The configured sources folder for this run is empty (place-files.sh creates ./empty-sources
+  and the prompt points NEWMONT_BRAND_SOURCES at it). brand_sources.py exits 2 naming the
+  missing role(s), the glob and the folder. The run shows that message, says which file is
+  missing and where it is expected, builds nothing (no pptx, no html), does not fall back to the
+  values in references/ or SKILL.md, does not point the variable back at the repo's
+  brand-sources/ to get round the error, and writes a log entry for the stopped request.
+  Note: relative values of NEWMONT_BRAND_SOURCES resolve against the skill root, not the
+  working directory, so the folder named in the error may be <skill>/empty-sources; either
+  folder counts.
+context:
+  scaffold_script: place-files.sh

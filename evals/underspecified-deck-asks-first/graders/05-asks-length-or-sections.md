@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-The questions ask how long the deck should be or which sections it needs.
+The questions ask how long the deck should be or which sections it needs, with a default (8 slides).

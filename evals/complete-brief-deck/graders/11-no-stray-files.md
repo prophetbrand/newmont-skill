@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-The outputs contain only the deliverable, the build script, the kit copy, the photos and renders; no virtual environments, proxy decks or stale files are left behind.
+The outputs contain only the deliverable, its run record, a build script and renders; no virtual environments, copies of the skill scripts, proxy decks or stale files are left behind.

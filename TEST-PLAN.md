@@ -38,3 +38,10 @@ Goal: measure how consistently the skill turns the same prompt into the same qua
 ## Running it again later
 
 From the skill directory, with Claude Code installed: `claude plugin eval . --allow-tools Write,Edit,Bash --scaffold` runs the same case folders. The skill-creator workflow (this session) is the equivalent inside the app.
+
+## Round four (2026-11-16): template routing and source of truth
+
+The skill was rebuilt around the Brand Identity Guidelines (October 2025) and the two Feb 2026 PowerPoint templates. Decks are now instances of a template's named layouts (`scripts/newmont_deck.py`), the sources are resolved from `brand-sources.json` (`scripts/brand_sources.py`), requests are routed by `scripts/route_template.py`, and every request is logged (`scripts/brand_log.py`). The old hand-measured kit and its geometry checks are gone.
+
+- Unit tests (`python3 -P -m unittest discover -s tests -v`) cover source resolution and versions, the loud failure when a file is missing or duplicated, every routing rule, the log fields, the kit's role maps for all 97 layouts (snapshots in `tests/fixtures/`), placeholder clean-up, the run record, and the checker's exit code on an off-brand deck.
+- Five acceptance cases were added under `evals/` for the three phases: `routing-qbr-detailed-view`, `routing-strategy-exec-summary`, `routing-ambiguous-asks`, `missing-source-stops`, `activation-word-memo`. The nine earlier cases were re-pointed at layout names, the router's reason and the run record. Results: `evals/RESULTS-2026-11-16.md` (one smoke run each; the three-run repeatability pass is still to do).

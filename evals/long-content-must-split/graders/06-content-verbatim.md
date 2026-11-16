@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Every line of the brief appears verbatim in the deck.
+Every line of the brief appears verbatim in the deck (checker `--required-text required-text.txt` PASS or equivalent inspection).

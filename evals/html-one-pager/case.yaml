@@ -2,7 +2,10 @@ schema_version: "1.1"
 name: html-one-pager
 expected_outcome: |
   The content is complete and no photos are needed, so the run builds without asking.
-  tailings-update.html is a self-contained page in Open Sans with the Newmont palette,
-  flat design (no rounded corners, shadows or gradients), the logo symbol top-right,
-  the eyebrow in sky caps, the title as a sentence-case statement, three columns with
-  sky subheads, and the callout in a sky 10% panel, with the given text verbatim.
+  There is no approved HTML template among the sources, so the run applies the Brand Identity
+  Guidelines (October 2025) directly and says so, naming the sections used. tailings-update.html
+  is a self-contained page in Open Sans with only the October 2025 palette (the skill's CSS
+  tokens), flat design (no rounded corners, shadows or gradients), the logo handled without
+  redrawing or recolouring it, the eyebrow in dark blue caps, the title as a sentence-case
+  statement, three columns, and the callout on the pale #D9E8EC panel, with the given text
+  verbatim. The request is logged as an explicit other-product activation.

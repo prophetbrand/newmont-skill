@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: activation-word-memo
+expected_outcome: |
+  An explicit request for another Office product in Newmont style, so the skill applies on the
+  `explicit other product: Word` path. There is no approved Word template among the sources, so
+  the run resolves the sources, uses only the Brand Guidelines (October 2025), says so, and names
+  the sections it used (standard document, p30–32). safety-memo.docx is one page: title Open Sans
+  Bold, body Open Sans 9–11 pt, footer "Newmont Corporation" and page number, no gold text on
+  white, with the three points word for word and nothing invented. No router run, no template
+  question, no deck. The request is logged with activation path `explicit other product: Word`.

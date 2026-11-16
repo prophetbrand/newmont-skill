@@ -3,3 +3,11 @@ __pycache__/
 *.pyc
 .venv/
 .lo_profile/
+
+# Approved brand source files live here (large binaries, not versioned)
+brand-sources/*
+!brand-sources/README.md
+logs/
+out/demo-*.pptx
+out/demo-*.pdf
+out/*.run.json

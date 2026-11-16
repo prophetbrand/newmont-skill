@@ -1,11 +1,15 @@
 schema_version: "1.1"
 name: fix-off-brand-deck
 expected_outcome: |
-  The input is a four-slide deck in Calibri with a blue-grey and red palette, rounded
+  The input is a four-slide agency deck in Calibri with a blue-grey and red palette, rounded
   rectangles, drop shadows, a gradient background and Title Case headings. A good result
-  is fixed.pptx with the same four slides and all of the original text, restyled to
-  Open Sans, the Newmont palette, flat shapes, the logo and footer on content pages,
-  and a short list of what was changed. The run may ask about the deck name for the
-  footer and the date, but should not need more than that.
+  rebuilds it on a routed template (the request text has no router cue, so Executive Summary by
+  default, or Detailed View if the run routes on the quarterly-update content and says why),
+  every slide on a named layout, with every sentence of the original word for word, in order and
+  on its original slide, credit line included, no closing slide added, no explicit non-theme font,
+  only palette colours, nothing with effects, no empty placeholders, and a short list of what
+  changed plus title rewrites offered separately. The run may ask only for the deck name and
+  date (or state a default). The reply names the template, the reason and the source versions,
+  and fixed.pptx.run.json records activation path `restyle: existing deck`.
 context:
   scaffold_script: place-files.sh

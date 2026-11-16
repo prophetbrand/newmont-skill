@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: routing-strategy-exec-summary
+expected_outcome: |
+  A strategy explainer with all content, deck name and date given. The router matches
+  Executive Summary cues (strategy, explain), so there is no template question; the reply opens
+  with Executive Summary and the router's reason and quotes the source versions. Slides map by
+  content shape: a `1_Cover slide Opt 1` cover, the headline on `Statement`, the priorities on
+  `Three Column Panels` (or `Three Column`), today vs where we are going on `Two Column
+  Comparison`, the next steps on `Title Sub and Content` (or `Title and Content`) as a table, and
+  `Thank you Opt 1`. All text verbatim, bracketed dates kept as placeholders and listed in the
+  reply, run record present, checker passes with --template executive_summary.

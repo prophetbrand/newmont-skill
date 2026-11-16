@@ -1,13 +1,13 @@
 ---
-tags: [newmont-brand, round2]
+tags: [newmont-brand]
 max_turns: 40
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, Write, Edit, Bash]
 ---
 
-Newmont deck, PowerPoint, save as cadia-expansion.pptx. US spelling. Footer: "Newmont – Cadia Expansion Update". Cover date: November 2026. Photos: people.jpg (people) and site.jpg (wide site). Cover title: "Cadia Expansion" / "Update".
+Newmont deck, PowerPoint, save as cadia-expansion.pptx. It is a project update for the executive team. US spelling. Footer: "Newmont – Cadia Expansion Update". Cover date: November 2026. Cover title: "Cadia Expansion" / "Update".
 
-After the cover I need these, in order, then a closing page. Don't cut any of my text; if something doesn't fit the page type, split it across pages.
+After the cover I need these, in order, then a closing page. Don't cut any of my text; if something doesn't fit the layout, split it across slides.
 
 A. Six workstreams, each with a one-line description:
 - "Panel cave 2 development" / "Undercut advance is 410 m ahead of the plan and all extraction drives are complete."
@@ -26,6 +26,6 @@ B. Seven risks, each with a one-sentence mitigation:
 6. "Community concerns about dust" / "Real-time monitors are live on the village boundary with public reporting."
 7. "Regulatory timing" / "Weekly engagement with the department is scheduled through the assessment period."
 
-C. A page that says, in one sentence: "The expansion remains on schedule and within 2% of budget, and we are asking for approval to release the next funding tranche in December." with eyebrow DECISION REQUESTED.
+C. A slide that says, in one sentence: "The expansion remains on schedule and within 2% of budget, and we are asking for approval to release the next funding tranche in December." with the label DECISION REQUESTED.
 
-Input files: people.jpg, site.jpg
+(All figures in this brief are illustrative test values, not Newmont results.)

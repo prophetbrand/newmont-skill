@@ -1,362 +1,270 @@
 ---
 name: newmont-brand
-description: Newmont's visual identity, hard-coded and ready to apply. Use it whenever you create or restyle anything for Newmont or Newmont Corporation (slide decks and PowerPoint files, documents, reports, one-pagers, web pages, HTML artifacts, social or print graphics, charts, email headers) or when someone asks for content "in the Newmont style/brand/template", "on-brand for Newmont", or to fix a Newmont deck that looks off. Covers exact colours, Open Sans type scale with letter-spacing and line pitch, page geometry in points, the nine page types, logo (inline SVG and native PowerPoint shapes), photography and text-on-image rules, components, voice, and a tested python-pptx kit. Use it even if the request only mentions Newmont in passing. It starts with a short intake (content, format, photos, deck name and date) before anything is built, so nothing is assumed.
+description: Newmont's brand agent for decks. Use it whenever someone asks to create, build, draft, make, put together, update or redesign a PowerPoint, deck, presentation or slides, including indirect phrasing ("put this into slides for the QBR", "turn these notes into a few pages for the board", "a short presentation on X"). It picks the right approved Newmont template (Detailed View for business and performance reporting, Executive Summary for strategy and storytelling), builds every slide from that template's named layouts, applies the Brand Identity Guidelines (October 2025), and logs the activation, template choice and source versions. Also use it when a person explicitly asks for a Word document, Excel workbook, email or other Microsoft Office content "in the Newmont style" or "on-brand"; do not use it for Word, Excel or email requests that do not ask for Newmont branding, nor for non-Newmont work.
 ---
 
-# Newmont brand
+# Newmont brand agent
 
-Everything here was measured from Newmont's "Visual Identity Refresh" deck (14 pages, 16:9) and then proven by rebuilding eight of its pages from these values alone and comparing them with the originals block by block: positions within 2 pt, the same fonts, sizes and colours, and the same line breaks for over 90% of text blocks. Use the numbers as given. Where something was not in the source deck (charts, icons, illustration), it is marked **suggested**.
+This skill reads three approved files from one configured location and nothing else: the **Brand Identity Guidelines (October 2025)**, the **PowerPoint Template – Detailed View (Feb 2026)** and the **PowerPoint Template – Executive Summary (Feb 2026)**. Their digests are in `references/` (read them for detail), but the templates themselves are the source of truth: every slide you build is an instance of one of their named layouts, with the theme's fonts and colours, and the version of each file is recorded with every deck.
 
-Units: points (pt). The slide is 960 × 540 pt (13.333 × 7.5 in). 1 in = 72 pt; for screens 1 pt = 1.333 px, so the slide is 1280 × 720 px.
+Units are points (pt). Both templates are 960 × 540 pt (16:9).
 
-## How to use this skill
+## How a request flows
 
-1. **Get the inputs.** Read "Before you build" and compare it with the request. If a must-have is missing, ask for it in one message and build nothing until it arrives. If the request already gives everything, do not ask anything.
-2. **Map the content to page types** with the table in "Choosing page types", and write the page list down before coding.
-3. **Run the setup check**, then build: PowerPoint with `scripts/newmont_kit.py` (never retype it); other formats as in "Other formats".
-4. **Check and look.** Run `scripts/check_deck.py` on every deck, render it, and open the pages. Fix every FAIL.
-5. **Deliver** with the reply format at the end: pages built, assumptions and placeholders, what was checked, any departure from the system.
+1. **Activate and name the path.** Decide whether this skill applies (next section) and which activation path it is. You will log it at the end.
+2. **Resolve the sources.** Run `python3 scripts/brand_sources.py`. If it exits non-zero, stop and tell the person which file is missing and where it is expected; do not build from memory of older values.
+3. **Intake.** Compare the request with "Before you build". Ask for missing must-haves in one message, then wait.
+4. **Route to a template.** Run `python3 scripts/route_template.py "<the request>"`. Follow its decision; ask its clarifying question when it says to.
+5. **Outline.** Write the slide list (number, layout name, title) using "Choosing layouts", and put it in your reply.
+6. **Build** with `scripts/newmont_deck.py`. Named layouts only; a free-form slide only when no layout fits, and say so.
+7. **Check and look.** Run `scripts/check_deck.py`, render, open every page, fix every FAIL.
+8. **Deliver and log.** Reply in the format at the end. The kit writes the request log when you save; for requests that end without a deck (not activated, stopped to ask, source missing), write the log entry yourself with `scripts/brand_log.py`.
 
-If the person asks for something that breaks a rule (a new colour, a different font), do it, and say in one line that it departs from the Newmont system.
+## Phase 1: activation
+
+**Activate** for any request to create, build, draft, write, make, put together, update, restyle or redesign a PowerPoint, deck, presentation, slides, pages for a meeting, a pitch or a board pack, whatever the wording, and including indirect phrasing such as "put this into slides", "turn this into a few pages for the QBR", "can you deck this up". Every such request from a Newmont user is a Newmont deck; the person does not have to say "Newmont".
+
+**Also activate** when the person explicitly asks for another Microsoft Office product in Newmont style: a Word document, Excel workbook, Outlook email or signature, "on-brand", "in the Newmont template", "to brand standards". Then apply "Other formats" below.
+
+**Do not activate** for Word, Excel, email or other non-PowerPoint requests that do not ask for Newmont branding, for decks about another company that are not Newmont's, or for questions that only mention a deck in passing ("summarise this deck for me" is a reading task, not a build).
+
+Name the path in your log and reply, with one of these labels:
+
+| Label | Example |
+|---|---|
+| `direct: deck/presentation/slides` | "build a deck on Q3 safety" |
+| `indirect: put into slides` | "put these notes into slides for the QBR" |
+| `restyle: existing deck` | "fix this deck so it looks like Newmont" |
+| `explicit other product: Word` (or Excel, email) | "a Word memo in the Newmont template" |
+| `not activated: non-PowerPoint request` | "write me an email to the site manager" |
+
+In a Claude session this skill only runs when it was loaded, so "not activated" entries can be written only by the host that decided not to load it; when you are loaded and decide the request is out of scope, log that yourself and say so in one line.
+
+## Phase 2: source of truth
+
+The configured location is `brand-sources.json` at the skill root: a `sources_dir` (default `brand-sources/` beside it, overridden by the environment variable `NEWMONT_BRAND_SOURCES`), one glob per role, and a `log_file`. `brand-sources/README.md` says what belongs there. Nothing in the scripts names a file by path; replacing a file in the folder changes the layouts, theme and versions the kit uses with no code change.
+
+Before any build:
+
+```bash
+python3 scripts/brand_sources.py          # prints role, version and file for all three sources
+```
+
+- The version string is the edition read from the file ("October 2025" from page 1 of the PDF; "Feb 2026" from the template file name) plus a sha256 prefix, so two files with the same edition but different content are told apart. Put the versions in your reply and they go into the log automatically.
+- **If a source is missing, will not open, or matches more than one file, the script exits 2 with the role, the glob and the folder.** Stop, show the person that message, and build nothing. Never fall back to the values in `references/` or in this file: they are digests, not the approved files. The one exception is an explicit Word, Excel or email request, which needs only the guidelines PDF; say which file was absent.
+- The templates are read live, so a replaced template changes layouts, theme and versions at once. The guidelines PDF cannot be read by a script, so its values (palette with graphics-only flags, chart series order, fonts, chart axis sizes) are digested into `brand-values.json` (the contrast pairs stay in the reference and in this file) beside the config, stamped with the edition they came from. When the PDF in the folder is a different edition from that stamp, `brand_sources.py` and the kit print a warning and the log entry carries `values_stale: true`; tell the person, build on the template (which still governs the deck), and name the re-digest as the follow-up. Do not edit `brand-values.json` from memory.
+- Where the guidelines and a template disagree (the October 2025 guidelines list the bright blue as `#0091DA` and allow Montserrat; the Feb 2026 templates use `#12A6E6` as a theme accent and Open Sans as the only theme font), **the template governs a deck** because the deck is an instance of it, and the guidelines govern everything the template does not set: charts, photography, contrast pairs, legal name, boilerplate, and all non-PowerPoint formats. Say so in one line if the person asks why a colour differs from the PDF.
+
+## Phase 3: template routing
+
+Run the router on the request text before outlining:
+
+```bash
+python3 scripts/route_template.py "put this into slides for the QBR"
+python3 scripts/route_template.py "a deck on the tailings strategy" --unattended   # when no one can answer
+```
+
+Its rules, which you follow rather than re-derive:
+
+- **Detailed View** for business reviews and QBRs, operational or financial performance and results, scorecards and KPI dashboards, people, labour or workforce updates, investor relations, progress reporting (progress updates, progress pictures), cost summaries, balance sheet and dividend reviews, highlights with risks and mitigations.
+- **Executive Summary** for strategy, proposals and business cases, project updates and kick-offs, explainers and overviews, training and onboarding, narratives, frameworks, roadmaps, plans, recommendations, options and comparisons, town halls.
+- A request that names a template ("use the detailed view template") gets that template.
+- **Fits both, or neither:** ask the one clarifying question the router prints, and nothing else in that message beyond the intake questions you already owe. If no one can answer (an unattended run, or the person has said to proceed with defaults), it defaults to Executive Summary; your reply then opens with the template chosen and the reason the router gave.
+- Detailed View layouts are also present inside the Executive Summary file (its "Everyday" master). Use one from there only when a single slide of a storytelling deck needs it (a scorecard in a strategy deck); the kit logs it as a cross-template layout.
+
+The log entry records the template, the reason and whether the question was asked. Do not override the router silently: if you disagree with its choice, say why in the reply and log your choice as the reason.
 
 ## Before you build: the inputs this skill cannot supply
 
-The system below is measured to the point, so it reproduces whatever it is given, including guesses. Most bad Newmont outputs are not styling mistakes; they are correct styling applied to assumed content, invented figures, a made-up deck name on every footer, or stand-in photos. Your first job is to notice what you do not know and ask for it once, before writing any code.
+The template reproduces whatever it is given, including guesses. Most bad outputs are correct styling applied to assumed content, invented figures or a made-up deck name on every footer. Notice what you do not know and ask for it once, before writing code.
 
 **Must have.** If the request does not give these, stop and ask; do not build around them.
 
 | Input | Why it blocks | If the person cannot supply it |
 |---|---|---|
-| **The content**: the actual points, figures, data, or a source document | A Newmont deliverable is read as fact. Never invent statistics, results, names or dates for it. | Offer to build the structure with bracketed placeholders like `[TRIFR 0.0]` and list every placeholder in the reply. |
-| **The format** | "Deck" means PowerPoint; "intranet page" or "web" means HTML; "one-pager", "document" or "something for the board" could be any of them, and each is built differently. | Default to PowerPoint for anything called a deck or slides; otherwise ask. |
-| **Photos**, when the pages need them (cover, closing, photo backdrop) | The kit crops real photo files into fixed boxes. Stock, generated or tinted images break the imagery rule and look wrong on sight. | Offer three options: send photos; build with sky-tile placeholders marked REPLACE where the photos go; or use dark-ground pages that need none. Never fetch or generate images. |
-| **Deck name and date** (decks only) | The deck name is printed on every footer and the date on the cover. An invented one is wrong on every page. | Propose one from the subject ("Newmont – Q3 2026 Safety Performance", the current month) and say it is a proposal. |
+| **The content**: the actual points, figures, data, or a source document | A Newmont deck is read as fact. Never invent statistics, results, names or dates. | Offer to build the structure with bracketed placeholders like `[TRIFR 0.0]` and list every placeholder in the reply. |
+| **The template**, when the router asks | The two templates have different layouts; a scorecard built on Executive Summary columns is the wrong deck. | Default to Executive Summary and say so. |
+| **Deck name and date** | The deck name is the footer of every slide and the date sits under the cover title. | Propose one from the subject ("Newmont – Q3 2026 Safety Performance", the current month) and mark it a proposal. |
 
-**Decide and state.** Do not ask about these; use the default and name it at the top of your reply so it can be changed in one line.
+**Decide and state.** Use the default, name it at the top of the reply, do not ask.
 
-- Length: what the content needs, one idea per page. Say the page count.
-- Spelling: match the person's own writing; otherwise US.
-- Audience and purpose: infer from the request ("exec team" means a short deck with a statement page and decisions; "intranet" means a plain, friendly page).
+- Length: what the content needs, one idea per slide. Say the slide count.
+- Photos: the covers and closings carry their own photographs, so none are needed for a standard deck. Picture layouts (Progress Pictures, Images & Messaging, Big statement with image, Thank you Opt 5) need real files; without them, avoid those layouts or build them with the kit's "PHOTO: replace" box and list it as a placeholder. Never fetch, generate or tint images.
+- Spelling: match the person's writing; otherwise US (the guidelines are US).
+- Audience and purpose: infer from the request.
 - File name: from the subject, lowercase with hyphens.
-- Footer name of a web page or document: "Newmont – " plus the subject taken from the title ("Newmont – Tailings Management Update"). Say which you used.
-- Callout style on the web: the sky 10% panel. Use the bordered box only when the panel would sit on another tint.
-- Everything the skill already decides: colours, fonts, geometry, logo placement, footer text. Asking about these wastes the person's time.
+- Everything the template decides: fonts, sizes, colours, logo, footer layout. Asking about these wastes the person's time.
 
-**How to ask.** One message, numbered, normally four to six questions and never more than eight. Order them by how much they change the result (content first). End each with the default you will use if they say "just go", so a one-word answer is enough. Do not ask about anything the request already states. A complete brief gets zero questions: build at once. If the person says "just make it" or you are told to proceed with defaults, build with placeholders and open your reply with the list of assumptions. In an unattended run where no one can answer, write the questions down and stop rather than guess.
+**How to ask.** One message, numbered, at most six questions, content first, each ending with the default you will use if they say "just go". Add the router's template question as one of them when it applies. A complete brief gets zero questions. If the person says "just make it", build with placeholders and open the reply with the assumptions. In an unattended run: the template question alone is answered by the router's default (Executive Summary, stated in the reply); any other must-have that is missing means you write the questions down, log the request as asked-and-stopped, and stop rather than guess.
 
-Example. Request: "put together a newmont deck on our Q3 safety performance for the exec team". Ask:
-1. The Q3 figures (TRIFR, lost-time injuries, fatalities, high-potential incidents, with Q2 or the target for comparison), or the report they are in. Nothing is built without them.
-2. The two or three messages the executives should leave with, and any decision you need from them.
-3. Two approved photos, one of people and one wide site view. Default: marked placeholders.
-4. Deck name and cover date. Default: "Newmont – Q3 2026 Safety Performance", November 2026.
-5. Roughly how many slides. Default: 8 to 10.
+Example. "put together a newmont deck on our Q3 safety performance for the exec team" routes to Detailed View (performance). Ask:
+1. The Q3 figures (TRIFR, recordable injuries, fatalities, high-potential incidents, with Q2 or the target for comparison), or the report they are in. Nothing is built without them.
+2. The two or three messages the executives should leave with, and any decision needed.
+3. Deck name and cover date. Default: "Newmont – Q3 2026 Safety Performance", November 2026.
+4. Roughly how many slides. Default: 8.
 
-Spelling, file name and audience are not asked: they are decided and stated in the reply. Request with the deck name, date, photos and every page's text given: no questions. Build it.
+## Choosing layouts
 
-## Quick rules
+Pick the layout from the shape of the content, not from taste, so the same brief always becomes the same deck. Exact layout names matter: the kit looks them up by string. Full placeholder lists, limits and sample slides are in `references/layouts-executive-summary.md`, `references/layouts-detailed-view.md` and `references/template-sample-slides.md`; the live list for the installed file is `python3 scripts/catalog_layouts.py <template.pptx>`.
 
-- Font: **Open Sans** only, in Regular, Bold and Italic. Never Montserrat, Arial or system defaults for text.
-- Colours: navy `#0C2B82`, deep navy `#071434`, sky `#12A6E6`, gold `#FCAF17`, white. Sky and gold are accents; gold is tiny.
-- Light pages: white ground, navy text, sky for eyebrows, subheads and page numbers. Dark pages: deep navy ground, white text, sky eyebrows.
-- Slide titles: 24 pt Bold, sentence case, a full-sentence statement, 1–2 lines, letter-spacing −0.039 em, top-left at 36 pt.
-- Logo symbol top-right on every content page; sky logo tile on cover, section divider and closing.
-- Footer on every page except cover and closing: deck name left, NEWMONT CORPORATION right, page number in sky.
-- Flat design: no gradients, drop shadows, rounded corners, outlines or photo filters.
-- Photography: real Newmont sites and people; never stock-looking, never tinted. White text on a photo only over a dark, calm area; otherwise use the white 70% panel.
+**Executive Summary (storytelling)**
 
-## Colour
-
-| Token | Hex | Use | Share of a typical deck |
-|---|---|---|---|
-| navy | `#0C2B82` | text on light grounds, section-divider ground, chevrons, table and column rules, logo N on light | ~7% |
-| deep navy | `#071434` | ground for cover, closing and statement pages | ~20% |
-| sky | `#12A6E6` | eyebrows, column subheads, numbered headings, page numbers, logo tile, 10% panels | ~6%, plus ~10% as tint |
-| gold | `#FCAF17` | logo triangle, cover date; nothing else at text size | <1% |
-| white | `#FFFFFF` | light ground; text on dark | ~45% |
-| sky block | `#00A9EC` | large sky panel on section dividers only | — |
-| gold block | `#FFAB00` | gold square on section dividers only | — |
-| arrow navy | `#061641` | 1 pt timeline arrows | — |
-| panel edge | `#010310` | 1 pt border of white panels over photos | — |
-| footer grey | `#A6A6A6` on light, `#BFBFBF` on dark | footer text | — |
-| muted grey | `#7F7F7F` | footnotes and their labels | — |
-| rule grey | `#BFBFBF` | 0.75 pt table row rules | — |
-| table total | `#EDEDEE` | total-row fill | — |
-| milestone band | `#CEEEFB` | timeline milestone row | — |
-| gantt row / pause | `#F2F2F2` / `#DFDFDF` | timeline rows / holiday column | — |
-
-Tints: the sky panel is `#12A6E6` at **10% opacity** (renders `#E9F6FC` on white); a de-emphasised or optional column uses 5% (`#F6FAFC`). Panels over photos are white at **70% opacity** with a 1 pt `#010310` border.
-
-Contrast (WCAG): navy on white 12.5:1, white on deep navy 18.1:1, sky on deep navy 6.6:1, gold on deep navy 9.7:1, navy on the divider sky 4.7:1. Sky on white is only 2.8:1, so use sky on white only for bold text of 10.5 pt and up (eyebrows, subheads), never for body copy.
-
-## Typography
-
-Install Open Sans as **static** files, one per weight (Regular, Bold, Italic, Bold Italic; for example from the googlefonts/opensans repository, `fonts/ttf/`). A variable Open Sans file makes LibreOffice fake the bold, which looks heavier and wider.
-
-Letter-spacing (tracking) is given in em of the font size: in PowerPoint `spc` = em × size × 100; in CSS `letter-spacing: <em>em`. All text in the source is set slightly loose (+0.009 em); keep it, because it decides where lines wrap. Line pitch is the distance from one line to the next in points (PowerPoint: line spacing "Exactly"; CSS: line-height).
-
-| Role | Size | Weight | Colour | Tracking | Line pitch | Notes |
-|---|---|---|---|---|---|---|
-| Closing display | 54 | Regular | white | −0.017 em | — | "Thank you!" |
-| Section title | 48 | Regular | navy | −0.009 em | — | on the sky block |
-| Cover title | 36 | Bold first line ("Newmont"), Regular after | white | −0.024 em | 39.8 | each line ≤ ~22 characters, max 4 lines |
-| Slide title | 24 | Bold | navy; white on dark/photo | −0.039 em | 29.4 | ≤ 2 lines (≈ 70 characters per line at full width) |
-| Statement | 24 | Regular | white | +0.002 em | 29.3 | lead statement on dark or photo; 12 pt between paragraphs |
-| Callout title | 18 | Bold | navy | +0.008 em | 21 | inside panels on photos, centred |
-| Callout line / subtitle | 16 | Italic (panels) or Bold (page subtitle) | navy | +0.008 / +0.02 em | — | |
-| Column subhead | 14.5 | Bold | sky | −0.013 em | 16.3 | 2 lines |
-| Body large | 12 | Regular, bold lead-in line | white or navy | +0.008 em | 18 | statement-page columns, tables (pitch 14.3) |
-| Eyebrow | 10.5 | Bold, ALL CAPS | sky | +0.015 em | — | e.g. PURPOSE |
-| Body | 10 | Regular; bold lead-ins inline | navy | +0.009 em | 11.8 | stand-alone bold labels +0.022 em |
-| Caption | 8 | Bold | navy | 0 | — | above images and charts |
-| Footer left | 8.5 | Regular, ALL CAPS | footer grey | +0.086 em | — | NEWMONT – DECK NAME |
-| Footer right | 8 | Regular, ALL CAPS | footer grey | +0.108 em | — | NEWMONT CORPORATION |
-| Page number | 8 | Regular | sky | +0.009 em | — | right-aligned to x 925 |
-| Cover date | 7 | Bold, ALL CAPS | gold | +0.199 em | — | |
-
-Lists (10 pt body): round bullet "•", hanging indent 13.5 pt (15.4 pt in the right-hand column of phase panels), 3 pt between items, 9 pt after the opening paragraph of a column, 12.5 pt extra for a blank line.
-
-## Page geometry and furniture
-
-Positions below are the **top-left of the first glyph** in pt, which is what you see. PowerPoint text boxes start higher: with zero internal margins, box top = glyph top − 0.317 × size for single-spaced text, or glyph top − (pitch − 0.887 × size) when line spacing is "Exactly". The kit does this for you.
-
-- Margins: left 36, right ~32 (content ends by x 928), title glyph top 38.9, footer glyph top 519.2.
-- Logo symbol: x 886.5, y 36.7, 42.1 × 37.6 pt (navy N on light, white N on dark; triangle always gold).
-- Logo tile: 105.6 pt sky square; symbol inside at (34.3, 34.3), scale 0.953. The tile is the layout module: cover, divider and closing blocks snap to its edges.
-- Footer: left text x 36; right text x 756.2; page number right edge 925. Section dividers keep only the page number.
-- Two columns: x 36 and 487.5 (statement pages) or 36 and 493.5 (phase panels).
-- Three columns: x 36 / 372.6 / 653.5, text widths 240 / 255 / 250; 0.5 pt navy vertical rules at x 351 and 634 from y 143 to 464; subhead glyph top 143.9; body 187.8; content (images, charts) from about y 240.
-
-## Page types
-
-### Cover (and closing)
-Deep navy ground. Logo tile at (0, 0). Photo of people at (105.6, 105.8) 353.3 × 248.4. Wide operations photo at (458.9, 353.7) 501.1 × 186.3, bleeding off the right and bottom edges. Title block glyph top (500.4, 107.1): "Newmont" in Bold, then 1–3 Regular lines, 36 pt white, pitch 39.8; write it as short lines, each fitting 428 pt (≈ 22 characters). Date at (500.4, 310.3), 7 pt Bold caps gold. No footer, no page number.
-Closing: same frame and photos; "Thank you!" 54 pt Regular white at (500.7, 277.5).
-
-### Section divider
-Navy ground. Sky block `#00A9EC` at (276.5, 0) 683.5 × 322.9. Logo tile at (0, 216.5). Gold block `#FFAB00` at (105.6, 322.9) 170.9 × 148.5. Title 48 pt Regular navy at (304.9, 252.2), one line, ≤ ~20 characters. Page number only.
-
-### Statement on dark
-Deep navy ground, white logo, footer. Title (white; pale `#D9E8EC` appears once in the source, do not copy). Eyebrow at (36, 116). Statement 24 pt at (36, 139.5), max width 640, ≤ 2 lines. Two columns from glyph top 234 (eyebrow) and 257.5 (items), x 36 and 487.5, width 380: each item is a bold 12 pt lead-in line then a 12 pt body (pitch 18), 18 pt between items, 2–3 items per column, body ≤ 3 lines.
-
-### Content, three columns
-White ground, navy logo, footer, 2-line title. Three columns as in the grid above: sky subhead (≤ 2 lines), 10 pt navy body (≤ 4 lines), then evidence: screenshots with a 0.25 pt black hairline (they may overlap in a cascade), charts, or numbers. Navy 0.5 pt rules between columns.
-
-### Photo backdrop with panels
-Full-bleed photo whose top-left is dark and calm (sky or shadow). White logo, footer in light grey. Title white, max width 451 (2 lines). Statement 24 pt white at (36, 159.5), width 500, ≤ 6 lines, 12 pt between paragraphs. Two white 70% panels with 1 pt `#010310` border: (36.4, 379.1) and (492.4, 378.4), each 432 × 101.3. Inside, centred: label and heading 18 pt Bold navy (pitch 21, first glyph 23.2 below the panel top), then one 16 pt Italic line 66.2 below the panel top.
-
-### Phase panels (process, plan, scope)
-White ground, title (often "Step 1: … | Key Steps"). "Objective" bold label at (36, 83.6), one-sentence body at (36, 95.6), width 540. Duration labels 10 pt Bold navy at (36, 144.1) and (493.5, 144.1), each followed by a 1 pt `#061641` arrow at y 147.4 starting 57.3 pt after the label and ending at x 475.7 / 928.3. Sky 10% panel at (20, 161.5) 916.8 × 342.9. Inside: sky bold numbered headings ("1. …") at y 179.7, x 36 / 493.5; body lists from y 203.7, widths 410 / 420, ≤ ~24 lines. An optional third column uses the 5% tint with light text.
-
-### Table (fees, results, comparisons)
-Title, optional subtitle 16 pt Bold navy at (36, 61.6). Table x 36–900, columns at 36 / 307 / 602, cell text inset 7 pt left and 6 pt from the row top, 12 pt navy (pitch 14.3). Header row 21.6 pt, Bold, 1.5 pt navy rule below. Body rows 36 pt, 0.75 pt `#BFBFBF` rule below each. Total row 21.6 pt, Bold, fill `#EDEDEE`. 1 pt white vertical separators at the column edges (only visible on filled rows). A secondary table below starts with a 1.5 pt navy rule on top. Footnote: 10 pt Bold `#7F7F7F` label at (35.8, 448.7) and 10 pt `#7F7F7F` text 12.1 below, width 660, pitch 12.
-
-### Timeline (Gantt)
-Week header row (bold number, date below), a `#CEEEFB` milestone band with navy star markers and 8 pt bold labels, `#F2F2F2` phase rows with navy `#0C2B82` chevron bars carrying white 12 pt italic durations, a `#DFDFDF` pause column (holidays), and dashed navy vertical milestone lines with 8 pt bold labels at the bottom.
-
-### Plain content page
-Title, logo, footer, and a body built from the components below, aligned to x 36 and the column positions above.
-
-## Choosing page types
-
-Pick the page type from the shape of the content, not from taste, so the same brief always becomes the same deck. Write the page list (number, type, title) before coding and put it in your reply.
-
-| The content is… | Page type | Limits |
+| The content is… | Layout | Limits |
 |---|---|---|
-| The opening | Cover | title in short lines of ≤ 22 characters, 2–4 lines; two photos or placeholders |
-| A new chapter in a deck of 8+ pages | Section divider | one line, ≤ 20 characters; skip dividers in shorter decks |
-| One claim and the two to six points behind it | Statement on dark | statement ≤ 2 lines; 2–3 items per column, body ≤ 3 lines each |
-| One claim with nothing under it (a decision, a purpose line) | Statement on dark, columns left out | same statement limits; still a statement page, not a blank page |
-| Four or more items that each have a bold lead-in and one sentence (workstreams, risks and mitigations, actions and owners, questions and answers) | Lead-in list (`lead_in_list`, suggested) | up to 4 items per column, 8 per page; a 9th item starts a second page; never a table, tables are for numbers |
-| Exactly three parallel points, each with a short explanation and optional evidence | Content, three columns | subhead ≤ 2 lines; body ≤ 4 lines; evidence below y 240; four or more points are a lead-in list, not two three-column pages |
-| A mood or priorities page with a photo | Photo backdrop with panels | needs a photo with a dark, calm top-left; two panels |
-| A process, plan or scope with two phases | Phase panels | ≤ ~24 lines per column; third column optional |
-| Numbers in rows (fees, results, comparisons) | Table | 3 columns, ≤ 7 body rows, optional total and footnote; not for sentences |
-| A schedule | Timeline (Gantt) | weeks across the top |
-| A quarter's or year's results for executives | Financial summary page (suggested) | KPI tile row, drivers on the left, guidance or a chart on the right, outlook strip; see "Financial results pages" |
-| Several metrics across periods with variances | Financial comparison table (`fin_table`, suggested) | up to 5 columns, numbers right-aligned, grouped rows, ≤ 12 body rows; one table per page |
-| The close | Closing | "Thank you!" with the same photos as the cover |
-| Anything else (a list, a chart, one paragraph) | Plain content page | build the body with the primitives on the column grid |
+| The opening | `1_Cover slide Opt 1` (photos vary by cover variant; pick one and keep it) | title ≤ 2 lines (~35 characters); subtitle line and date |
+| What the deck covers | `Agenda` (`Agenda Image` with a photo) | purpose ~100 characters; 4 items |
+| A new chapter (decks of 8+ slides) | `Section divider - Dark`; lighter: `Sub-section divider` | ≤ 2 lines, ~30 characters |
+| One claim that stands alone | `Statement`; with a photo: `Big statement with image - Dark Blue` (`Light`, `Light Blue`) | ~300 characters; picture needs a file |
+| A story and its conclusion | `Story / Summary` | story ~130, conclusion ~80 characters |
+| Two, three or four parallel points | `Two/Three/Four Column Panels` (`… Panels Icon` only with icon files); plain text: `Two/Three/Four Column` | 2–3 short paragraphs per panel, ~250 characters at three |
+| Headed comparison (before/after, option A/B, risks/mitigations) | `Two/Three/Four Column Comparison` | header one line; body ~320 characters per column |
+| One chart | `Single chart with lead-in text`; with commentary: `Single chart with supporting text` | ≤ 8 categories; ≤ 7 bullets |
+| Two to six charts | `Two charts`, `Three charts`, `Four charts`, `Six charts`, each also `… with supporting text` | one header line per chart |
+| A table | `Title Sub and Content` (lead-in + table) or `Title and Content` | ≤ 12 rows; two tables: `Two Content` |
+| Several small tables or KPI tiles | `Four Content Sub` | ≤ 5 rows each |
+| A process, timeline or framework | `Title Sub and Content` with a timeline table; otherwise a free-form slide on `Title Only` (say so) | |
+| The close | `Thank you Opt 1` (`Opt 5` with own photos) | one or two words |
 
-Rules: one idea per page; when text you wrote exceeds a limit, shorten it or split the page, never shrink the type; every deck is cover, content pages, closing, with dividers only when it has chapters. A four-point list is two statement pages or a plain page, not a cramped three-column page.
+**Detailed View (business and performance reporting)**
 
-When the brief gives content but no page titles, write each title as a one-sentence statement drawn only from that page's own content, and list the titles you wrote under the assumptions in your reply.
+| The content is… | Layout | Limits |
+|---|---|---|
+| The opening | `1_Cover slide Opt 1b` | as above |
+| Purpose or agenda | `Purpose`; `Agenda` | one sentence ~100 characters; 4 items |
+| A new chapter | `Section divider - Dark`; `Sub-section divider` | ~30 characters |
+| Overall highlights with risks and a KPI table | `Overall Highlights` | 9 and 4 bullets; table 4–5 rows |
+| Highlights, risks and mitigations by region or function | `Highlights, Risks & Mitigations` | two panels, 6–12 short lines each |
+| Three columns of performance points with a takeaway | `Quarterly Performance` | 3 bullets per column |
+| Lead column plus three topics | `Work Underway` | 6 bullets per column |
+| Executive summary narrative with call-outs | `Ex Summary` | narrative ~700 characters; 6 call-outs |
+| Scorecard: KPI strips, small charts, commentary | `ScoreCard`; tables only: `ScoreCard Tables` | tables 2–3 rows; 4 bullets |
+| KPI tiles | `Key Metrics` (7 tiles) | one metric and 1–2 lines each |
+| Financial table | `Financial Performance (full Portfolio)`; costs: `Cost Summary` | ≤ 14 rows |
+| Chart with table and commentary | `Performance Against Plan` / `… 2`; six charts: `Summary Financial Metrics` | |
+| Balance sheet and dividend | `Balance Sheet & Dividend Review` | two charts, 2 bullets each |
+| Investor relations | `QBR: Investor Relations Update` | ~8 bullets per column |
+| Customers and markets | `Customers & Markets` | |
+| People or workforce | `People Dashboard`; labour map: `Labour Relations Landscape` (map labels are free shapes) | |
+| Risks with pictures | `Risks & Mitigation` | ≤ 10 rows, 4 pictures |
+| Progress photos | `Progress Pictures`, `x2`, `x3`, `x4`; with text: `Images & Messaging` | one caption line each |
+| Outlook and guidance | `Outlook` | main table ≤ 8 rows |
+| The close | `Thank you Opt 1`; questions: `Q&A` | |
 
-**Default outline when only a topic is given** ("a deck on our Q3 safety performance", with figures to come or placeholders agreed): 8 pages, always in this order, so two builds of the same request match. 1 cover; 2 statement on dark with the headline and what went well / what needs attention; 3 table of the headline figures against the prior period and target; 4 plain content page with the trend chart (or a sky-tint box marked "CHART: replace" when there is no data); 5 three columns for the themes or drivers; 6 phase panels for the plan; 7 statement on dark with the decisions requested; 8 closing. Drop a page only when the person says the deck must be shorter, and say which one you dropped.
+Rules:
 
-When text the person gave you exceeds a limit, keep their words and keep the measured geometry: build the page as given, and in the reply name the line that needs shortening and by roughly how much. Do not widen boxes, move neighbouring elements or shrink type to make it fit. Three builds of the same brief should produce the same page; the person decides what to cut.
+- **Named layouts only.** A free-form slide (`free_slide`, on `Title Only`) is allowed only when no layout fits (a drawn process, a map); name it in the reply and it is logged as free-form. Never rebuild a layout by hand.
+- One idea per slide. When text exceeds a limit, shorten or split it onto a second slide of the same layout; never shrink the type or move the placeholders.
+- Titles are one-sentence statements in sentence case, ≤ 2 lines. When the brief gives none, write each from that slide's own content and list them under the assumptions.
+- Every deck: cover, content slides, closing; agenda when it has four or more sections; dividers only in decks of 8+ slides.
+- Default outlines when only a topic is given (figures to come or placeholders agreed), fixed so two builds match. Executive Summary, 8 slides: cover; `Statement` with the headline; `Agenda`; `Three Column Panels` with the themes; `Two Column Comparison` (what is working / what needs attention); `Single chart with supporting text` (chart marked "CHART: replace" without data); `Title Sub and Content` with the plan as a table; `Thank you Opt 1`. Detailed View, 8 slides: cover; `Purpose`; `Overall Highlights`; `ScoreCard Tables` with the headline figures against prior period and target; `Quarterly Performance`; `Highlights, Risks & Mitigations`; `Outlook`; `Thank you Opt 1`. Drop a slide only when the person asks for a shorter deck, and say which.
+- When the person's own text exceeds a limit, keep their words and the layout as they are, and name in the reply the line that needs shortening and by roughly how much.
 
-## Restyling an existing deck
+## Brand rules the template does not enforce
 
-When asked to fix a deck that looks off, rebuild it with the kit rather than patching fonts and colours in place: patched files keep theme fonts, style references and shadows that come back when the deck is opened elsewhere. Steps: read every slide's text first; map each slide to a page type with the table above (a title-and-bullets slide becomes a plain content page or a statement page, three boxes become three columns); ask only for the deck name and the cover date if they are not in the file, with a proposed default; build; run the checker; reply with a short list of what changed (fonts, colours, shapes, furniture, structure) and anything you could not carry over.
+From the Brand Identity Guidelines, October 2025 (`references/brand-guidelines-2025-10.md` has every value).
 
-"Keep the content" means every sentence word for word, in its original order and on its original slide, titles, credits and footers included. Change case (Title Case to sentence case), size, position and colour; do not rewrite titles into statements, reorder a line, drop a credit line, merge or add pages (no closing page unless the original had one). If a title would be better as a statement, offer the rewrite in the reply as a separate list, and leave the deck as the person wrote it. Photos the original lacks get the marked sky placeholders from "Making a deck", not blank navy.
+- **Colour.** Primary: dark blue `#0C2B82` (PMS 287), gold `#FCAF17` (PMS 130). Secondary: darkest navy `#071435`, mid blue `#3A68C5`, bright blue `#0091DA` (graphics only on white), green `#509E2F` (graphics only on white), pale blue-grey `#D9E8EC`; each with 80/50/20% tints. Light panels are `#D9E8EC` or a 20% tint, not a 10% screen. The templates' theme adds `#12A6E6` as an accent and `#A3A7AA` as a grey; use them where the template does.
+- **Contrast pairs** (text on ground), from the guideline matrix: gold only on `#0C2B82` or `#071435`, never on white; white text on `#0C2B82`, `#071435`, `#3A68C5`; on white, `#0091DA` and `#509E2F` only bold or over 18 pt; `#D9E8EC` text only on the two dark blues. Copy is otherwise black, white or dark blue.
+- **Type.** Open Sans is the template theme and the deck font; Montserrat is approved for chart titles, pull quotes and subtext but the templates do not use it, so keep Open Sans in decks and use Montserrat only in other formats where the guidelines name it. Approved weights: Regular, Italic, SemiBold, Bold, Extra Bold. Verdana or Tahoma only in HTML email and signatures. Never set a font name on slide text; the layout inherits the theme. Charts are the exception: python-pptx charts do not inherit the theme reliably, so the kit names Open Sans on chart text and Montserrat Bold caps on a chart title, as the guidelines specify.
+- **Charts.** Flat: no bevels, shadows, gradients or 3D. Series colours in order `#0C2B82`, `#FCAF17`, `#071435`, `#3A68C5`, `#0091DA`, `#509E2F`, then the 80% tints. 0.5 pt black axis rules; 8 pt axis labels (the guidelines' 6 pt is a print minimum and unreadable on screen); no gridlines; legend at the bottom when there is more than one series; pie slices separated by white gaps with the value labelled outside each slice in navy (inside, labels vanish on the dark slices); the chart heading goes in the layout's header placeholder, not in the chart. The kit's chart builder does all of this; a chart with no data yet is passed as `None` and drawn as a box marked "CHART: replace".
+- **Gradients and patterns.** Data graphics stay flat. The two approved background gradients (287→282, 2386→287) and the topographic line pattern are used only where a layout already carries them; do not add them to content slides.
+- **Logo artwork for other formats.** None of the three sources ships a stand-alone logo file. For Word, HTML or email, ask the person for the approved artwork (Corporate Communications supplies it); if they say to proceed without it, use the logo image embedded in the template master and say in the reply that it was extracted from the template, not an approved logo file.
+- **Photography.** Real Newmont operations and people, documentary and unfiltered, hi-vis and white branded hard hats, natural light. Covers and closings have theirs baked in. Never stock-looking, generated, duotoned or tinted images; a white 90% overlay or an approved gradient overlay is the only treatment, and only where a layout provides it.
+- **Logo.** It is in the layouts; never add a second one, redraw it, recolour the triangle or add effects. Clear space is half the height of the N. Monogram alone is fine internally.
+- **Legal name and boilerplate.** "Newmont Corporation" in formal titles, legal copy and the footers of documents (deck footers carry the deck name; the layouts already print the company name); "Newmont" or "the Company" in sentences. The approved boilerplate paragraph is in the reference (section 1); use it verbatim when a deck needs company description.
+- **Voice.** Titles are full-sentence assertions in sentence case. Body: a bold lead-in, then one or two plain sentences; lists for scope and steps. Tone confident, pragmatic, plain-spoken.
 
-## Financial results pages (suggested)
+## Building with the kit
 
-The source deck has no financial pages, so these are derived from its components and marked suggested; keep them unless the person has a measured Newmont results template, in which case use that. Two pages cover most quarterly reporting, and they must not repeat each other's numbers.
-
-- **Financial summary page**: title is the one sentence the executives should remember; eyebrow "EXECUTIVE SUMMARY | Q[X] 20XX"; a row of four KPI tiles (`kpi_tiles`: label, value, two comparison lines each, chosen from production, AISC, adjusted EBITDA, free cash flow, revenue, net debt); left column "WHAT DROVE THE QUARTER" with three lead-ins (production, costs, cash and balance sheet); right column "AGAINST FULL-YEAR GUIDANCE" as a compact three-column mini table or, when there is trend data, a chart; a 0.5 pt navy rule, then "OUTLOOK AND DECISIONS" in one or two lines; the non-GAAP footnote.
-- **Financial comparison table**: title says what moved; subtitle names the periods; `fin_table` at y 100 (it sits under the subtitle) with the unit in the first header cell ("USD millions unless stated"), three period columns (this quarter, prior quarter, same quarter last year) then one Δ column that compares with the prior quarter, rows grouped under sky caps labels (OPERATING, FINANCIAL, BALANCE SHEET AND RETURNS), numbers right-aligned, 24 pt rows, 8 to 10 body rows, the non-GAAP footnote. Only the metrics that are not already tiles on the summary page need full detail here; tiles may reappear only as table rows with the extra periods.
-
-On the summary page the drivers and outlook are body large (12 pt, pitch 18) and the footnote keeps its 10 pt role; if something does not fit, cut a row or a line, never the type size.
-
-Rules for numbers: units in the header or the row label, never in every cell; negative values with a minus sign, not parentheses, unless the person's own tables use parentheses; percentages with one decimal; a Δ column states what it compares against in the footnote.
-
-**Templates.** When the person asks for a template rather than a filled deck, build the page with bracketed placeholders that show the format ("[$0.0B]", "[+0.0%]", "[0,000 koz]"), put an "e.g." example only in the title placeholder, and say in the reply which metrics and rows are suggestions to swap. A template still gets the full checker and render pass.
-
-## Imagery
-
-- Subjects: real operations and people — workers in hi-vis yellow and navy PPE with white branded hard hats, collaborating; haul trucks; aerial views of pits, stockpiles and conveyors. Natural, often golden-hour light; warm ochre and red earth against the navy palette. Documentary, sharp, no filters, no duotone, no tint.
-- Shape: rectangles with square corners, no borders or shadows (except the 0.25 pt hairline on evidence screenshots).
-- Placement: photos snap to the tile grid on cover and closing and may bleed off the right and bottom edges; full-bleed photos back statement pages.
-- Text on photos: white text only where the photo under the text is dark and calm (median luminance ≤ 0.30, little texture); in practice the top-left sky or shadow. Where the area is busy or mid-toned, put the text in a white 70% panel with navy text. Never over faces or the main subject. On covers, text sits on the flat navy, not on the photos.
-- Choose photos for the job: people for the cover's first photo, a wide operations view for the second; for a photo backdrop, a picture with a dark upper-left third.
-
-## Components
-
-- Sky panel: `#12A6E6` at 10%, square corners, no border, about 20 pt from the page edges.
-- Column rule: 0.5 pt navy vertical line.
-- Duration arrow: 10 pt bold navy label, then a 1 pt `#061641` line with a small triangular arrowhead.
-- Chevron bar: navy pentagon/chevron with a white 12 pt italic label.
-- Milestone: navy star with an 8 pt bold navy label.
-- Callout box on light: 1 pt navy border, 10 pt body with a bold lead-in.
-- Evidence thumbnail: screenshot with a 0.25 pt black frame, cascaded with overlaps.
-- Charts (**suggested**, none in the source): series in the order navy, sky, deep navy, grey `#A6A6A6`; gold only to highlight one value; no 3D, no shadows; 0.5 pt `#D9D9D9` gridlines or none; labels 8–10 pt navy Open Sans; titles as 8 pt Bold captions.
-- Icons (**suggested**, none in the source): simple navy line icons, about 1.5 pt stroke, no fills, no containers.
-
-## Voice
-
-- Titles are full-sentence assertions in sentence case ("The current system is built on strong base assets, but…"). Process pages may use "Step 1: … | Key Steps".
-- Body: a bold lead-in, then one or two plain sentences. Lists for scope and steps. Numbered section headings in sky ("1. Masterbrand Identity Development").
-- Eyebrows in ALL CAPS sky ("PURPOSE", "WHY WE NEED THIS…").
-- Tone: confident, pragmatic, plain-spoken. The source mixes UK and US spelling; pick one per document (match the person's own).
-
-## Logo
-
-Use the symbol as supplied; never redraw, recolour the triangle, stretch, add effects, or place it on a busy photo without a dark calm area. Clear space: at least the triangle's height on all sides. Minimum size about 24 pt wide.
-
-On light grounds (navy N):
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.12 37.57"><path fill="#0C2B82" d="M28.47 0V21.17L14.3 0H4.06V27.22L13.09 14.17L29.29 37.54H37.51V0Z"/><path fill="#FCAF17" d="M0 37.56H26.2L13.09 18.63Z"/><path fill="#0C2B82" d="M38.64 35.79V36.05H39.13V37.56H39.44V36.05H39.95V35.79ZM41.73 35.79L41.16 37.14L40.62 35.79H40.21V37.56H40.48V36.18L41.01 37.47H41.28L41.81 36.18V37.56H42.12V35.79Z"/></svg>
-```
-
-On dark grounds (white N):
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.12 37.57"><path fill="#FFFFFF" d="M28.47 0V21.17L14.3 0H4.06V27.22L13.09 14.17L29.29 37.54H37.51V0Z"/><path fill="#FCAF17" d="M0 37.56H26.2L13.09 18.63Z"/><path fill="#FFFFFF" d="M38.64 35.79V36.05H39.13V37.56H39.44V36.05H39.95V35.79ZM41.73 35.79L41.16 37.14L40.62 35.79H40.21V37.56H40.48V36.18L41.01 37.47H41.28L41.81 36.18V37.56H42.12V35.79Z"/></svg>
-```
-
-Logo tile (cover, divider, closing):
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 105.6 105.6"><rect width="105.6" height="105.6" fill="#12A6E6"/><g transform="translate(34.32 34.32) scale(0.953)"><path fill="#FFFFFF" d="M28.47 0V21.17L14.3 0H4.06V27.22L13.09 14.17L29.29 37.54H37.51V0Z"/><path fill="#FCAF17" d="M0 37.56H26.2L13.09 18.63Z"/><path fill="#FFFFFF" d="M38.64 35.79V36.05H39.13V37.56H39.44V36.05H39.95V35.79ZM41.73 35.79L41.16 37.14L40.62 35.79H40.21V37.56H40.48V36.18L41.01 37.47H41.28L41.81 36.18V37.56H42.12V35.79Z"/></g></svg>
-```
-
-The cover also sets the wordmark "Newmont" in Open Sans Bold as the first title line. No separate wordmark artwork was in the source; do not invent one.
-
-## Making a deck (PowerPoint)
-
-**Setup check**, before writing code:
+**Setup check** before writing code:
 
 ```bash
 python3 -c "import pptx" 2>/dev/null || pip install python-pptx
+python3 scripts/brand_sources.py
 fc-list 2>/dev/null | grep -qi "open sans" && echo "Open Sans installed" || echo "Open Sans NOT installed"
 which soffice || ls /Applications/LibreOffice.app/Contents/MacOS/soffice
 ```
 
-If Open Sans is not installed, still set the font to Open Sans in the file (PowerPoint uses it wherever it is installed) and tell the person that your rendered preview used a substitute, so line breaks may differ slightly. The static TTFs are in the googlefonts/opensans repository under `fonts/ttf/`; on macOS they go in `~/Library/Fonts`. Never switch to another font to make the preview look right. If LibreOffice is missing, say that the deck was checked but not rendered.
+If Open Sans is not installed, the file is still correct (the theme names it; PowerPoint uses it wherever it is installed), but tell the person your preview used a substitute so line breaks may differ. If LibreOffice is missing, say the deck was checked but not rendered.
 
-**The kit** is `scripts/newmont_kit.py` next to this file. Copy it beside your build script and import it; never retype or trim it, and do not change its numbers. It draws the logo as native vector shapes, places every element at the measured positions, applies letter-spacing and line pitch, crops photos to fill their boxes, and removes the drop shadows python-pptx would otherwise add. Positions it takes are glyph tops in points, as in the page-type tables; `box_top()` converts them to text-box tops.
+`scripts/newmont_deck.py` opens the routed template from the configured location, removes its sample slides, and adds slides by layout name, filling placeholders by role. Import it from the `scripts` folder (add it to `sys.path`); do not copy or edit it.
 
-| Method | Builds |
+| Call | Does |
 |---|---|
-| `Deck(deck_name)` | the presentation; `deck_name` is the footer text |
-| `cover(title_lines, date, photo_people, photo_wide)` | cover; `title_lines` are the Regular lines after the bold "Newmont" |
-| `closing(photo_people, photo_wide, text='Thank you!')` | closing page |
-| `divider(name)` | section divider |
-| `statement(title, eyebrow, statement, left_label=None, left_items=None, right_label=None, right_items=None)` | statement on dark; items are `(bold lead-in, body)`; leave them out for a statement that stands alone |
-| `three_columns(title, columns)` | three columns; `columns` is 3 × `(subhead, body)` |
-| `photo_panels(title, paragraphs, panels, photo)` | photo backdrop; `panels` is 2 × `(label, heading, italic line)` |
-| `phase_panels(title, objective, phases)` | phase panels; see the docstring for the `phases` dicts |
-| `table(title, subtitle, header, rows, total=None, footnote=None)` | table page |
-| `lead_in_list(title, items, labels=(None, None), dark=False, numbered=False)` | up to 8 `(lead-in, body)` items in two columns; suggested, not measured |
-| `kpi_tiles(s, tiles, y=100)` | on a `blank()` page: 3–4 sky-tint tiles of `(label, value, [lines])`; suggested |
-| `fin_table(s, header, groups, y=150.6, col_w=None, row_h=26, note=None)` | on a `blank()` page: N-column financial table with right-aligned numbers and grouped rows; suggested |
-| `blank(title, dark=False)` | title, logo and footer only; add the body with `text`, `rect`, `line`, `picture`, `logo` |
-| `save(path)` | writes the file and strips the style references that add shadows |
-
-Photo placeholders: when the person has no photos yet, pass `None` as the photo path. `cover`, `closing` and `picture` then draw the sky box with a white "PHOTO: …, replace" label at the measured position; never leave the box empty, draw the cover by hand, or pull in an image from elsewhere.
-
-Example:
+| `Deck(template, deck_name, date=None, request='', routing=None, *, activation_path, asked=False)` | `template` is `"detailed_view"` or `"executive_summary"`; `activation_path` (keyword, required) is one of the Phase 1 labels; pass the router's dict as `routing` so the log records its reason, and `asked=True` when you asked the clarifying question (the router's own flag is reset once it is answered); raises `SourceError` if the file is missing |
+| `d.roles(layout_name)` | returns the roles a layout accepts (`title`, `subtitle`, `lead`, `body`, `col1..colN`, `head1..headN`, `tag1..`, `pic1..`, `chart1..`, `table1..`, `source`) as a dict of role to placeholder idx, resolved from the live file; the CLI `python3 scripts/newmont_deck.py executive_summary --roles "<layout>"` prints it |
+| `d.add(layout_name, **fills)` | adds one slide; text is a string (paragraphs on `\n`), a list of strings, `(text, level)` bullets or `[(text, bold, italic), …]` runs; `picN` takes a file path or `None` (a wrong path raises); `chartN` a dict `{"type", "categories", "series"}` or `None`; `tableN` or a content role a dict `{"header", "rows"}` or `None`; `None` draws a "PHOTO/CHART/TABLE: replace" box; unfilled placeholders are removed. Put a chart in a `chartN` role and a table in a `tableN` or content role; a chart forced into a table placeholder (or the reverse) becomes an unlinked frame that the checker counts as free-form |
+| `d.free_slide(title)` | a `Title Only` slide for the rare case no layout fits; draw on it with the module functions `text`, `rect`, `picture` (`from newmont_deck import text, rect, picture`) |
+| `d.save(path)` | writes the deck, the run record `<path>.run.json`, and the request log line |
 
 ```python
-from newmont_kit import Deck
-d = Deck('Newmont – Q3 2026 Operations Review')            # footer text
-d.cover(['Q3 2026 Operations', 'Review'], 'October 2026', 'people.jpg', 'pit.jpg')
-d.divider('Performance')
-d.three_columns('Output held steady while safety improved at every site',
-                [('Production held at plan', 'Tier 1 sites offset slower ramp-up.'),
-                 ('Safety improved in all regions', 'Recordable injuries fell again.'),
-                 ('Costs are trending down', 'AISC eased as projects completed.')])
-d.photo_panels('Two priorities will shape the fourth quarter', ['We will keep production on plan.'],
-               [('Priority 1:', 'Sustain production', 'Hold output within 2% of plan'),
-                ('Priority 2:', 'Complete autonomy', 'Bring two sites to full operation')], 'conveyor.jpg')
-d.closing('people.jpg', 'pit.jpg')
-d.save('q3-review.pptx')
+import sys; sys.path.insert(0, 'scripts')
+from newmont_deck import Deck
+from route_template import route
+r = route('a deck explaining our tailings strategy to site leaders')
+d = Deck('executive_summary', 'Newmont – Tailings Strategy', date='November 2026',
+         request='a deck explaining our tailings strategy to site leaders', routing=r,
+         activation_path='direct: deck/presentation/slides')
+d.add('1_Cover slide Opt 1', title='Tailings strategy', subtitle='Site leadership briefing\nNovember 2026')
+d.add('Statement', body='Every facility will meet the Global Industry Standard on Tailings Management by 2028.')
+d.add('Three Column Panels', title='Three commitments shape the next two years', lead='The plan rests on three commitments.',
+      col1=[('Close the gaps', 0), 'Independent reviews at every site by Q2.'],
+      col2=[('Build the capability', 0), 'Accountable executives named per facility.'],
+      col3=[('Report openly', 0), 'Annual public disclosure from 2027.'])
+d.add('Single chart with supporting text', title='Reviews are ahead of plan',
+      col1=['[Commentary line 1]', '[Commentary line 2]'], head1='Facilities reviewed by quarter',
+      chart1={'type': 'column', 'categories': ['Q1', 'Q2', 'Q3'], 'series': {'Reviewed': [4, 7, 9]}})
+d.add('Thank you Opt 1', title='Thank you')
+d.save('tailings-strategy.pptx')
 ```
 
-Content rules the kit cannot enforce: keep within the line limits given for each page type (shorten or split instead of shrinking type), write cover titles as short lines, and add content inside columns and panels with the primitives (`text`, `rect`, `line`, `picture`, `logo`) on the same x positions.
-
-## Other formats
-
-**Web pages and HTML artifacts.** Scale 1 pt = 1.333 px for slide-sized pages; for normal web pages keep the ratios and use the type scale below.
-
-```css
-:root{
-  --nm-navy:#0C2B82; --nm-deep:#071434; --nm-sky:#12A6E6; --nm-gold:#FCAF17; --nm-white:#FFFFFF;
-  --nm-panel:rgba(18,166,230,.10); --nm-panel-ghost:rgba(18,166,230,.05); --nm-photo-panel:rgba(255,255,255,.70);
-  --nm-grey:#A6A6A6; --nm-muted:#7F7F7F; --nm-rule:#BFBFBF;
-  --nm-font:"Open Sans", "Segoe UI", Arial, sans-serif;
-}
-body{font-family:var(--nm-font);color:var(--nm-navy);letter-spacing:.009em}
-.nm-title{font-weight:700;font-size:32px;line-height:39.2px;letter-spacing:-.039em}      /* 24pt / 29.4pt */
-.nm-statement{font-weight:400;font-size:32px;line-height:39px;letter-spacing:.002em}
-.nm-subhead{font-weight:700;font-size:19.3px;line-height:21.7px;letter-spacing:-.013em;color:var(--nm-sky)}
-.nm-eyebrow{font-weight:700;font-size:14px;letter-spacing:.015em;text-transform:uppercase;color:var(--nm-sky)}
-.nm-body{font-size:13.3px;line-height:15.7px}
-.nm-body-lg{font-size:16px;line-height:24px}
-.nm-footer{font-size:11.3px;letter-spacing:.086em;text-transform:uppercase;color:var(--nm-grey)}
-.nm-panel{background:var(--nm-panel);border-radius:0}
-.nm-dark{background:var(--nm-deep);color:#fff}
-```
-
-Load Open Sans from Google Fonts (weights 400 and 700, italic 400). Page skeleton, top to bottom: a deep navy header band with the white logo symbol top-right, holding the eyebrow, the title and the lead statement; the body on white with the columns separated by 0.5 pt navy rules; callouts in the sky 10% panel; a footer line in grey caps with the document name left and NEWMONT CORPORATION right. Keep square corners, no shadows, the logo symbol top-right, and the dark/light page logic. Open the page in a browser (or render it) before delivering; a page that was never looked at usually has one overflow.
-
-**Documents (Word, PDF, Docs).** Title 24 pt Bold navy (−0.039 em); H2 14.5 pt Bold sky; eyebrows 10.5 pt Bold caps sky; body 10–11 pt navy Open Sans at about 1.2 line spacing; tables as in the table page type; logo symbol top-right of the first page; footer in 8–8.5 pt caps grey. Use the sky 10% panel for call-outs.
-
-**Other tools.** Apply the same colours, Open Sans with the tracking values above, square corners and the photo rules. Where a tool cannot set letter-spacing, accept default spacing rather than switching fonts.
+Run `d.roles('<layout>')` for any layout before filling it the first time; the role names depend on the placeholders the installed file has, and they are the thing that changes when a template is replaced.
 
 ## Checking before delivering
 
-For a deck, run the checker and fix every FAIL before anything else:
-
 ```bash
-python3 scripts/check_deck.py deck.pptx --deck-name "Newmont – Deck name" --content-slides 3,4,5 --no-furniture-slides 1,6
-```
-
-It checks that every run is Open Sans (an inherited theme font fails, because it renders as Calibri), that every colour is in the palette, that nothing has a shadow, gradient, style reference or rounded corner, that the content slides carry the logo, footer and page number and the cover and closing do not, and the slide size. Then render and look at every page:
-
-```bash
+python3 scripts/check_deck.py deck.pptx --template executive_summary --deck-name "Newmont – Tailings Strategy" [--free-form-slides 5] [--required-text brief.txt] [--expect-slides 8]
 soffice --headless --convert-to pdf --outdir out deck.pptx
 ```
 
-Open the PDF (or convert pages to PNG with pymupdf) and check what the script cannot: no text overflows its region, titles are ≤ 2 lines, cover lines are short, white text on photos sits only on dark calm areas, and each page is next to one of the same type from the source if you have it.
+Both `--template` and `--deck-name` are required, and the checker exits 1 on any FAIL. It confirms that the deck's master is the chosen template's (theme name) and every slide uses one of its named layouts, that no slide carries free shapes except those listed as free-form, that no empty placeholder prompts remain, that any font or colour you set explicitly is approved, that nothing you added has a shadow, gradient, 3D or rounded corner, that the footer carries the deck name and the page number field is present, the slide size, and the required text. Fix every FAIL. Then open the rendered pages and check what the script cannot: no text overflows its placeholder, titles are ≤ 2 lines, charts are legible, nothing overlaps the baked-in photos.
 
-For HTML and documents, check the same things by hand: only Open Sans and the palette, no rounded corners, shadows or gradients, the logo top-right, eyebrows in sky caps, titles as sentence-case statements, and the text verbatim from the brief.
+## Reply format
 
-**Reply format.** Open with the assumptions and placeholders, if any. Then the pages built (number, type, title), what was checked (checker run, rendered and looked at, or why not; whether Open Sans was installed for the preview), and any departure from the system in one line each. Do not describe the brand rules back to the person.
+Open with: the template chosen and why (the router's reason, and whether a question was asked or the default applied); the source versions used (from `brand_sources.py`); then assumptions and placeholders, if any. Then the slides built (number, layout name, title), any free-form slide and why, what was checked (checker run, rendered and looked at, or why not; whether Open Sans was installed for the preview), and any departure from the system in one line each. Do not describe the brand rules back to the person.
 
-## Things in the source not to copy
+The kit writes the log line on `save()`. When no deck is saved, log by hand, for example:
 
-Montserrat in one footer, a pale `#D9E8EC` title on one dark page, titles without negative tracking on two pages, and mixed UK/US spelling. These are inconsistencies in the source, not rules.
+```bash
+python3 scripts/brand_log.py --request "put this into slides for the QBR" --activated --activation-path "indirect: put into slides" --template detailed_view --reason "Matched Detailed View cues: QBR." --notes "stopped to ask for the figures"
+python3 scripts/brand_log.py --tail 3
+```
+
+## Restyling an existing deck
+
+Rebuild it on the routed template rather than patching fonts and colours in place: patched files keep foreign theme fonts and effects. Read every slide's text first; map each slide to a layout with the tables above (title and bullets become `Title and Content` or `Title Sub and Content`; three boxes become `Three Column Panels`); ask only for the deck name and date if they are not in the file, with a proposed default; build; check; reply with what changed and anything you could not carry over.
+
+"Keep the content" means every sentence word for word, in its original order and on its original slide, titles, credits and footers included. Change case, size, position and colour; do not rewrite titles, reorder lines, drop credits, or add slides (no closing slide unless the original had one). Offer title rewrites as a separate list in the reply.
+
+## Other formats (only when explicitly asked for in Newmont style)
+
+Apply the guidelines PDF directly; there is no approved template for these in the sources, so say so and name the guideline sections used.
+
+- **Word, PDF, Docs.** Standard document (guidelines p30): a dark navy header band with the reversed logo left; title Open Sans Bold 20/21 pt navy; intro Open Sans Light 15/21 pt; section heads Montserrat Regular 10/12 pt caps with 0.5 pt letter-spacing in `#0C2B82`; body Open Sans Regular 9/12 pt; footer "NEWMONT CORPORATION" in Montserrat caps left, page number right. Report or memo (p31): monogram top-left, a Montserrat 10 pt caps label in `#3A68C5`, title Open Sans Bold 20/27 pt, section heads Open Sans Regular 14 pt caps, lead 12/16 pt, body 9/12 pt, footer "NEWMONT CORPORATION | [DOCUMENT TITLE]" left and "DATE | PAGE x OF y" right above a rule. Tables: dark blue header row with white bold text, 0.5 pt grey rules. Call-outs on `#D9E8EC`.
+- **Excel.** Open Sans throughout, header row `#0C2B82` with white bold text, no banding or borders other than 0.5 pt `#A3A7AA` rules, numbers right-aligned with units in the header, charts styled as above.
+- **Email and signatures.** Verdana (Tahoma as alternate), the signature block and banner sizes from guideline section 9; never embed the logo at less than the minimum screen size.
+- **Web pages and HTML.** Open Sans from Google Fonts; the tokens below; square corners; the logo top-left or top-right with clear space; eyebrows in dark blue caps; call-outs on the pale panel.
+
+```css
+:root{
+  --nm-blue:#0C2B82; --nm-navy:#071435; --nm-mid:#3A68C5; --nm-bright:#0091DA; --nm-green:#509E2F;
+  --nm-gold:#FCAF17; --nm-pale:#D9E8EC; --nm-pale-80:#E1EDF0; --nm-pale-50:#ECF3F6; --nm-grey:#A3A7AA;
+  --nm-font:"Open Sans","Segoe UI",Arial,sans-serif; --nm-accent-font:"Montserrat",var(--nm-font);
+}
+body{font-family:var(--nm-font);color:#000}
+h1{font-weight:700;color:var(--nm-blue)} .nm-eyebrow{font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--nm-blue)}
+.nm-quote{font-family:var(--nm-accent-font)} .nm-panel{background:var(--nm-pale);border-radius:0}
+.nm-dark{background:var(--nm-navy);color:#fff}
+```
+
+Contrast pairs apply everywhere: no gold on white, no normal-weight bright blue or green text on white.

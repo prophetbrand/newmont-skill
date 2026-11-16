@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-Teal #008080 is used for the top event banner and nowhere else; every other colour is from the Newmont palette.
+Teal #008080 is used for the top event banner and nowhere else; every other colour is from the October 2025 palette tokens in the skill, black or white.

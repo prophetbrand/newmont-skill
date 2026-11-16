@@ -1,10 +1,14 @@
 schema_version: "1.1"
 name: photo-backdrop-and-phases
 expected_outcome: |
-  Complete brief, no questions. Slide 2 is a full-bleed backdrop photo with white title,
-  the two 24 pt paragraphs and two white 70% panels with the 1 pt border at the kit's
-  positions. Slide 3 has the objective, two duration labels with arrows, the sky 10% panel
-  and two numbered phase columns with the paragraph and bullets. The kit's photo_panels and
-  phase_panels methods are used rather than hand-built approximations.
+  Complete brief, routed to Executive Summary (plan), no questions. Slide 2 uses a
+  `Big statement with image` layout with backdrop.jpg in its picture placeholder (not tinted or
+  duotoned) and the statement verbatim. Slide 3 is the process: either `Title Sub and Content`
+  with a timeline table (phases, durations, headings, steps) or a free-form slide on
+  `Title Only` that the reply names as free-form with the reason and the run record marks
+  `free-form:`; the checker is then run with --free-form-slides 3. Slide 4 is
+  `Thank you Opt 5` with people.jpg in its picture placeholder. Cover on a `1_Cover slide Opt 1`
+  variant with its own photo. No empty placeholders, no fetched or generated images, every
+  line of the brief verbatim, the run record lists the layouts, the reply quotes versions.
 context:
   scaffold_script: place-files.sh

@@ -1,11 +1,16 @@
 schema_version: "1.1"
 name: complete-brief-deck
 expected_outcome: |
-  Everything needed is in the brief, so the run builds without asking. The result is
-  ahafo-review.pptx with six 960x540 pt slides in the given order, every text run in
-  Open Sans, only palette colours, the two photos on the cover and closing, the logo
-  and footer on the three content pages, the table with four body rows, a total row
-  and a footnote, no shadows, gradients or rounded corners, and the brief's text
-  reproduced verbatim.
+  Everything needed is in the brief, including the template (Executive Summary, named
+  explicitly), so the run builds without asking. ahafo-review.pptx has six 960x540 pt slides
+  in the given order, each an instance of a named Executive Summary layout: a cover
+  (1_Cover slide Opt 1 family), a section divider, a two-column comparison, a three-column
+  panels page, a table page (Title Sub and Content or Title and Content) and Thank you Opt 1.
+  Fonts come from the theme (no explicit font other than Open Sans or Montserrat), explicit
+  colours are in the palette, nothing added has effects, no placeholder is left empty, the
+  footer carries the deck name, and the brief's text is reproduced verbatim. The reply names
+  the template and the router's reason, quotes the source versions, and the run record
+  ahafo-review.pptx.run.json lists the template, sources and layouts used. The checker was
+  run with --template executive_summary.
 context:
   scaffold_script: place-files.sh

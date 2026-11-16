@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: routing-ambiguous-asks
+expected_outcome: |
+  The request matches cues for both templates (Detailed View: progress update; Executive
+  Summary: project update), so the router asks its one clarifying question. Content, deck name
+  and date are given, so that is the only question owed. The eval run is unattended, so either
+  outcome passes: (a) the run writes questions.md with exactly that one template question
+  (default Executive Summary), builds nothing and logs the request as asked-and-stopped; or
+  (b) it uses the router's unattended default, builds on Executive Summary and opens its reply
+  with the template and the router's "defaulted" reason. It fails if it silently picks Detailed
+  View, asks more than the template question, or asks about fonts, colours, photos, length,
+  deck name or date.

@@ -1,10 +1,15 @@
 schema_version: "1.1"
 name: financial-template-two-slides
 expected_outcome: |
-  A template request: the person wants exactly two content slides, no cover or closing,
-  with placeholders. Format is clear (slides) and no figures are expected, so the run
-  builds without asking. Slide 1 is the financial summary page (KPI tiles, drivers,
-  guidance, outlook) and slide 2 the financial comparison table with periods and a delta
-  column, numbers right-aligned, built with the kit's kpi_tiles and fin_table. No metric
-  is repeated in full between the two slides. Placeholders show the format in brackets,
-  the reply lists which metrics are suggestions, and the checker was run.
+  A template request: the person wants exactly two content slides for quarterly financials
+  and reporting, no cover or closing, with placeholders. This is business and performance
+  reporting, so the deck is on the Detailed View template; the router finds no cue in this
+  wording ("quartlery financials" is not in its list) and "executvive summary slide" names the
+  purpose of a slide, not the Executive Summary template, so a good run either picks Detailed
+  View and says why it departs from the router, or asks only the router's template question. Slide 1 is a summary on
+  `Key Metrics`, `Ex Summary`, `Overall Highlights` or `ScoreCard Tables`; slide 2 is the
+  financial table on `Financial Performance (full Portfolio)` (or `Cost Summary` /
+  `Performance Against Plan`) with periods and a delta column. No metric is repeated in full
+  between the two slides, every figure is a bracketed placeholder showing its format, no
+  placeholder is left empty, the reply lists which metrics are suggestions, the checker was
+  run with --template detailed_view, and the run record lists template, sources and layouts.
