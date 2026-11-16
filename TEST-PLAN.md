@@ -2,7 +2,7 @@
 
 Goal: measure how consistently the skill turns the same prompt into the same quality of output, find what varies, and verify that question gating removes the "assumed and built the wrong thing" failures.
 
-## Why output varies today (read of SKILL.md, 2026-11-05)
+## Why output varied before the first revision (read of SKILL.md, 2026-11-05; the kit named here was retired on 2026-11-16)
 
 1. **No intake step.** The skill never says what to find out before building. Format, page types, deck name, date, photos, spelling, slide count and the actual content are all left to the model to guess.
 2. **Photos are required but never gated.** Cover, closing and photo-backdrop pages need image paths. With none given, runs variously skip photos, draw placeholder rectangles, download stock images or crash the kit.

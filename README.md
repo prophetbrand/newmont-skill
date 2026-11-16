@@ -14,8 +14,8 @@
 - `scripts/catalog_layouts.py` – prints a template's layouts and placeholders live; `scripts/brand_log.py` – the request log; `scripts/demo_build.py` – builds a demo deck from each template.
 - `tests/` – unit tests (`python3 -P -m unittest discover -s tests -v`).
 - `evals/` – repeatability and acceptance test cases in the `claude plugin eval` layout, plus dated results.
-- `TEST-PLAN.md`, `docs/` – how the skill is tested and the evaluation reports.
-- `out/` – demo renders.
+- `TEST-PLAN.md` – how the skill is tested.
+- `out/` – demo renders from the Feb 2026 templates.
 
 ## Setting up
 
@@ -32,4 +32,4 @@ Replacing a file in `brand-sources/` changes the layouts, theme and logged versi
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold
 ```
 
-The workspace pattern (three runs per prompt, programmatic plus LLM grading) is described in `TEST-PLAN.md` and the dated results under `evals/`.
+The workspace pattern (three runs per prompt, programmatic plus LLM grading) is described in `TEST-PLAN.md` and the dated results under `evals/`. Results dated before 2026-11-16 measured the retired hand-drawn kit and are kept only as history.
