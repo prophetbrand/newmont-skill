@@ -44,7 +44,7 @@ class DeckTest(unittest.TestCase):
         cls.built = {}
         for template, plan in PLANS.items():
             d = Deck(template, NAME, date="[Month Year]", request="test %s" % template,
-                     routing={"reason": "test routing", "defaulted": True}, activation_path=ACT)
+                     routing={"reason": "test routing", "defaulted": True, "template": template}, activation_path=ACT)
             for layout, fills in plan:
                 if fills is None:
                     s = d.free_slide("[Free]")
@@ -142,6 +142,30 @@ class DeckTest(unittest.TestCase):
         self.assertIn("colour FF0000", r.stdout)
         self.assertIn("FAIL A slide-number field", r.stdout)
 
+    def test_checker_required_text_is_case_sensitive(self):
+        path = self.built["executive_summary"][0]
+        req = os.path.join(self.tmp.name, "required.txt")
+        for lines, ok in ((["Thank  you", "[Lead]"], True), (["thank you"], False)):
+            with open(req, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines) + "\n")
+            r = self.check(path, "executive_summary", "--free-form-slides", "5", "--required-text", req)
+            self.assertEqual(r.returncode, 0 if ok else 1, r.stdout)
+            self.assertIn(("PASS " if ok else "FAIL ") + "Every required text line", r.stdout)
+
+    def test_checker_flags_prompt_and_filler_text(self):
+        prs = Presentation(self.built["executive_summary"][0])
+        prs.slides[1].shapes.title.text_frame.text = "Lorem ipsum dolor"
+        prs.slides[2].shapes.title.text_frame.text = "Click to add title"
+        path = os.path.join(self.tmp.name, "filler.pptx")
+        prs.save(path)
+        r = self.check(path, "executive_summary", "--free-form-slides", "5")
+        self.assertEqual(r.returncode, 1, r.stdout)
+        self.assertIn("FAIL No slide text contains 'Click to add' or 'Lorem ipsum'", r.stdout)
+        self.assertIn("slide 2: 'Lorem ipsum dolor'", r.stdout)
+        self.assertIn("slide 3: 'Click to add title'", r.stdout)
+        self.assertIn("PASS No slide text contains", self.check(self.built["executive_summary"][0], "executive_summary",
+                                                                 "--free-form-slides", "5").stdout)
+
     def test_checker_needs_template_and_deck_name(self):
         r = subprocess.run([sys.executable, "-P", os.path.join(SCRIPTS, "check_deck.py"),
                             self.built["executive_summary"][0]], capture_output=True, text=True)
@@ -203,6 +227,12 @@ class KitRulesTest(unittest.TestCase):
                 self.assertEqual(got, want)
                 self.assertTrue(all("title" in r for r in got.values()))
 
+    def test_quarterly_performance_roles(self):
+        roles = Deck("detailed_view", NAME, activation_path=ACT).roles("Quarterly Performance")
+        self.assertNotIn("lead", roles)
+        self.assertEqual([roles[k] for k in ("head1", "head2", "head3", "col1", "col2", "col3", "takeaway")],
+                         [1, 3, 14, 13, 2, 15, 16])
+
     def test_stale_values_warn_and_log(self):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp)
@@ -220,6 +250,39 @@ class KitRulesTest(unittest.TestCase):
                       "re-digest before trusting colours and chart rules", err.getvalue())
         self.assertTrue(rec["values_stale"])
         self.assertTrue(rec["clarifying_question_asked"])
+
+
+class RenderTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.env = mock.patch.dict(os.environ, {"NEWMONT_BRAND_LOG": os.path.join(self.tmp, "log.jsonl")})
+        self.env.start()
+        self.addCleanup(self.env.stop)
+        self.d = Deck("executive_summary", NAME, activation_path=ACT)
+        self.d.add("Title Only", title="[T]")
+        self.d.add("Thank you Opt 1", title="Thank you")
+
+    def test_missing_soffice_raises(self):
+        with mock.patch("newmont_deck.shutil.which", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "soffice"):
+                self.d.save(os.path.join(self.tmp, "deck", "x.pptx"), render=True)
+
+    def test_render_pngs(self):
+        if not shutil.which("soffice"):
+            self.skipTest("LibreOffice 'soffice' is not on PATH: render test skipped")
+        cwd_before = sorted(os.listdir(os.getcwd()))
+        deck = os.path.join(self.tmp, "deck", "x.pptx")
+        rec = self.d.save(deck, render=True)
+        render = os.path.join(self.tmp, "deck", "render")
+        self.assertEqual(rec["render"], [os.path.join(render, "x-page-%d.png" % n) for n in (1, 2)])
+        for png in rec["render"]:
+            with open(png, "rb") as f:
+                self.assertEqual(f.read(8), b"\x89PNG\r\n\x1a\n")
+        self.assertTrue(os.listdir(os.path.join(render, ".lo-profile")))
+        self.assertEqual(sorted(os.listdir(os.getcwd())), cwd_before)
+        with open(deck + ".run.json") as f:
+            self.assertEqual(json.load(f)["render"], rec["render"])
 
 
 class MissingSourceTest(unittest.TestCase):

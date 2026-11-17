@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Resolve the approved Newmont brand source files (guidelines PDF, two pptx templates) from ONE configured folder.
 Usage: python brand_sources.py [--json] [--role detailed_view]
+       python brand_sources.py --logo out.png [--template executive_summary|detailed_view]
 Config: brand-sources.json at the repo root ("sources_dir", "log_file", "files": role -> glob/kind/label).
 Env overrides: NEWMONT_BRAND_SOURCES (folder), NEWMONT_BRAND_LOG (log file), NEWMONT_BRAND_CONFIG (json path),
 NEWMONT_BRAND_VALUES (brand-values.json, the values digested from the guidelines PDF; config key "values_file").
 Replacing a file in the folder changes what the skill uses; a missing file, or more than one file matching a role,
 raises SourceError (exit 2), never a fallback. A guidelines edition other than the one brand-values.json was digested
-from prints a loud warning (stale_warning)."""
-import argparse, datetime, glob, hashlib, json, os, re, sys, zipfile
+from prints a loud warning (stale_warning).
+--logo / extract_logo(): the template has no stand-alone logo file, so the logo picture is taken from master 0 (or,
+when master 0 has none, its layouts): of the pictures at most a quarter of the slide wide, the one whose top-right
+corner is nearest the slide's top-right corner, the smallest image part on a tie. Its image part is written in its native format beside the requested path (out.emf) and, when soffice is on
+PATH, converted to the requested path (out.png) with a throwaway LibreOffice profile."""
+import argparse, datetime, glob, hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, zipfile
 
 DEFAULT_CONFIG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "brand-sources.json")
 MONTHS = ("January February March April May June July August September October November December "
@@ -128,11 +133,72 @@ def manifest(roles=None, cfg=None):
             "sources_dir": cfg["sources_dir"], "sources": resolve(roles, cfg)}
 
 
+def _pictures(shapes):
+    for s in shapes:
+        if s.shape_type == 13:  # MSO_SHAPE_TYPE.PICTURE
+            yield s
+        elif s.shape_type == 6:  # MSO_SHAPE_TYPE.GROUP
+            yield from _pictures(s.shapes)
+
+
+def extract_logo(out_path, template="executive_summary"):
+    """Write the template's logo image part beside out_path in its native format and, when soffice is available,
+    convert it to out_path. Returns {"native", "png" (None without soffice), "part", "found_on"}."""
+    from pptx import Presentation
+    src = resolve([template])[template]
+    prs = Presentation(src["path"])
+    master, width = prs.slide_masters[0], prs.slide_width
+    found = []
+    for owner in [master] + ([] if any(True for _ in _pictures(master.shapes)) else list(master.slide_layouts)):
+        for pic in _pictures(owner.shapes):
+            rid = pic._element.blip_rId
+            if rid and pic.width <= width / 4:  # logos are small; full-bleed photos also touch the corner
+                part = owner.part.related_part(rid)
+                dist = ((width - pic.left - pic.width) ** 2 + pic.top ** 2) ** 0.5 / 12700  # pt to top-right
+                found.append((round(dist), len(part.blob), part, "master 0" if owner is master else
+                              "layout %r" % owner.name))
+    if not found:
+        raise SourceError("No picture found on master 0 or its layouts in %s: cannot extract a logo. Ask Corporate "
+                          "Communications for the logo artwork." % src["file_name"])
+    _, _, part, where = min(found, key=lambda f: f[:2])
+    out_path = os.path.abspath(out_path)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    native = os.path.splitext(out_path)[0] + "." + part.partname.ext
+    with open(native, "wb") as f:
+        f.write(part.blob)
+    res = {"native": native, "png": None, "part": str(part.partname), "found_on": where}
+    soffice = shutil.which("soffice")
+    if native == out_path or not soffice:
+        return res
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run([soffice, "-env:UserInstallation=" + pathlib.Path(tmp, "profile").as_uri(), "--headless",
+                            "--convert-to", os.path.splitext(out_path)[1].lstrip(".") or "png", "--outdir", tmp,
+                            native], cwd=tmp, capture_output=True, text=True)
+        made = [f for f in os.listdir(tmp) if f != "profile"]
+        if r.returncode or not made:
+            raise SourceError("Logo written to %s, but soffice could not convert it to %s (exit %d): %s" % (
+                native, out_path, r.returncode, (r.stderr or r.stdout).strip()))
+        shutil.move(os.path.join(tmp, made[0]), out_path)
+    return dict(res, png=out_path)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--role", action="append", help="limit to a role (repeatable)")
+    ap.add_argument("--logo", metavar="OUT", help="extract the template's logo to OUT (native format beside it)")
+    ap.add_argument("--template", choices=["executive_summary", "detailed_view"], default="executive_summary",
+                    help="template to take the logo from (with --logo)")
     a = ap.parse_args()
+    if a.logo:
+        try:
+            r = extract_logo(a.logo, a.template)
+        except SourceError as e:
+            print("ERROR: %s" % e, file=sys.stderr)
+            sys.exit(2)
+        print("logo (%s, %s): %s" % (r["part"], r["found_on"], r["native"]))
+        print("png: %s" % (r["png"] or "not converted: LibreOffice 'soffice' is not on PATH"))
+        return
     try:
         m = manifest(a.role)
         guidelines = m["sources"].get("guidelines") or resolve(["guidelines"])["guidelines"]

@@ -5,7 +5,8 @@ Usage: python brand_log.py --request "..." --activated --activation-path "direct
        python brand_log.py --tail 5
 Fields: ts, request (first 300 chars), activated, activation_path (e.g. "direct: deck/presentation/slides",
 "indirect: put into slides", "explicit other product: Word", "not activated: non-PowerPoint request"), template,
-routing_reason, clarifying_question_asked, defaulted, sources (role -> version) or sources_error, output, layouts_used, notes."""
+routing_reason, clarifying_question_asked, defaulted, sources (role -> version) or sources_error, output, layouts_used, notes.
+A rebuild (same request and same non-empty output as the last line) replaces that line instead of appending."""
 import argparse, datetime, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import brand_sources
@@ -29,8 +30,24 @@ def log_request(request="", activated=False, activation_path="", template=None, 
     entry.update(output=output, layouts_used=list(layouts_used or []), notes=notes, **extra)
     path = log_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    line = json.dumps(entry, ensure_ascii=False) + "\n"
+    lines = []
+    if output and os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines(keepends=True)
+    try:
+        last = json.loads(lines[-1]) if lines else {}
+    except ValueError:
+        last = {}
+    if lines and (last.get("request"), last.get("output")) == (entry["request"], output):
+        lines[-1] = line  # a rebuild of the same request to the same file replaces its line
+        tmp = "%s.%d.tmp" % (path, os.getpid())
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.writelines(l if l.endswith("\n") else l + "\n" for l in lines)
+        os.replace(tmp, path)
+        return entry
     with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        f.write(line)
     return entry
 
 

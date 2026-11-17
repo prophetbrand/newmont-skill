@@ -9,6 +9,7 @@ Usage:  d = Deck("executive_summary", "Newmont - [Deck]", date="[Month Year]", r
         # picN=None / chartN=None / tableN=None draw a "PHOTO|CHART|TABLE: replace" box; a missing picture file raises
         s = d.free_slide("..");  rect(s, x, y, w, h, "D9E8EC");  text(s, x, y, w, h, "..")   # pt units
         record = d.save("out/deck.pptx")   # logs via brand_log.log_request and writes out/deck.pptx.run.json
+        record = d.save("out/deck.pptx", render=True)   # also out/render/deck-page-N.png (60 dpi), record["render"]
 CLI:    python3 newmont_deck.py executive_summary --roles "Three Column Panels"
 Roles: title subtitle lead body colN headN tagN picN chartN tableN source sourceN date footer, or a bare idx.
 The template comes from brand_sources.resolve() (SourceError when missing: no fallback). Every sample slide is
@@ -17,7 +18,7 @@ relationships, so no orphaned sample media is saved. Layouts are looked up by na
 Summary file's Everyday-master layouts are exposed as "everyday:<name>" and logged as cross-template.
 Palette, chart series, fonts and chart rules come from brand-values.json (brand_sources.load_values); when the
 guidelines PDF is a different edition, Deck() warns on stderr and the log entry carries values_stale: true."""
-import argparse, json, os, re, sys
+import argparse, json, os, pathlib, re, shutil, subprocess, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from copy import deepcopy
 
@@ -89,10 +90,16 @@ def layout_roles(layout):
             top = max(big, key=lambda i: i["size"])
             roles["title"] = top["idx"]
             rest.remove(top)
-    lead = [i for i in rest if i["type"] == "BODY" and i.get("size") == 14 and 110 <= i["top"] <= 130]
+    lead = [i for i in rest if i["type"] == "BODY" and i.get("size") == 14 and 110 <= i["top"] <= 130
+            and (i.get("width") or 0) >= 600]  # a 14 pt column header at the lead's height is not the lead
     if lead:
         roles["lead"] = lead[0]["idx"]
         rest.remove(lead[0])
+    takeaway = [i for i in rest if i["type"] == "BODY" and i.get("bold") and 10 <= (i.get("size") or 0) < 12
+                and (i.get("width") or 0) >= 600 and i["top"] >= 400]  # full-width bold bar near the bottom
+    if takeaway:
+        roles["takeaway"] = takeaway[0]["idx"]
+        rest.remove(takeaway[0])
     groups = {g: [] for g in ("head", "tag", "col", "pic", "chart", "table")}
     for i in rest:  # bold BODY = header, < 9 pt BODY = tag, other BODY/OBJECT = content column
         body = i["type"] == "BODY"
@@ -200,10 +207,11 @@ class Deck:
         self.free.add(len(self.used))
         return slide
 
-    def save(self, path):
+    def save(self, path, render=False):
         path = os.path.abspath(path)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         self.prs.save(path)
+        pngs = {"render": render_pages(path)} if render else {}
         used = [("free-form:" if n in self.free else "") + name for n, name in enumerate(self.used, 1)]
         cross = [u for u in used if u.startswith(EVERYDAY)]
         notes = ["%d free-form slide%s" % (len(self.free), "" if len(self.free) == 1 else "s")]
@@ -211,7 +219,7 @@ class Deck:
             notes.append("%d cross-template layout(s) from the Everyday master" % len(cross))
         r = self.routing
         if getattr(self, "_record", None):   # a second save of the same deck updates the run record, not the log
-            self._record.update(output=path, layouts_used=used, slides=len(self.used), notes="; ".join(notes))
+            self._record.update(output=path, layouts_used=used, slides=len(self.used), notes="; ".join(notes), **pngs)
             with open(path + ".run.json", "w", encoding="utf-8") as f:
                 json.dump(self._record, f, indent=2, ensure_ascii=False)
             return self._record
@@ -219,12 +227,38 @@ class Deck:
             request=self.request, activated=True, activation_path=self.activation_path,
             template=self.template, routing_reason=r.get("reason") or r.get("routing_reason") or "",
             clarifying_question_asked=self.asked, values_stale=self.values_stale,
-            defaulted=r.get("defaulted", False), output=path, layouts_used=used, notes="; ".join(notes),
+            defaulted=bool(r.get("defaulted", False)) and r.get("template") == self.template, output=path, layouts_used=used, notes="; ".join(notes),
             template_file=self.source["file_name"], template_version=self.source["version"],
             cross_template_layouts=cross, slides=len(self.used))
+        record.update(pngs)
         with open(path + ".run.json", "w", encoding="utf-8") as f:
             json.dump(record, f, indent=2, ensure_ascii=False)
         return record
+
+
+def render_pages(path, dpi=60):
+    """Render a saved deck to <deck dir>/render/<stem>-page-N.png via soffice (profile in render/.lo-profile, so no
+    profile folders land in the working directory) and pymupdf. Returns the PNG paths in page order."""
+    soffice = shutil.which("soffice")
+    if not soffice:
+        raise RuntimeError("Cannot render %s: LibreOffice 'soffice' is not on PATH (install it or add it to PATH)." % path)
+    out = os.path.join(os.path.dirname(path), "render")
+    profile = os.path.join(out, ".lo-profile")
+    os.makedirs(profile, exist_ok=True)
+    stem = os.path.splitext(os.path.basename(path))[0]
+    pdf, started = os.path.join(out, stem + ".pdf"), time.time()
+    r = subprocess.run([soffice, "-env:UserInstallation=" + pathlib.Path(profile).as_uri(), "--headless",
+                        "--convert-to", "pdf", "--outdir", out, path], cwd=out, capture_output=True, text=True)
+    if r.returncode or not os.path.exists(pdf) or os.path.getmtime(pdf) < started - 2:  # no stale PDF reuse
+        raise RuntimeError("soffice could not convert %s to PDF (exit %d): %s" % (path, r.returncode,
+                                                                                   (r.stderr or r.stdout).strip()))
+    import pymupdf
+    pngs = []
+    with pymupdf.open(pdf) as doc:
+        for n, page in enumerate(doc, 1):
+            pngs.append(os.path.join(out, "%s-page-%d.png" % (stem, n)))
+            page.get_pixmap(dpi=dpi).save(pngs[-1])
+    return pngs
 
 
 def _fill(slide, ph, value, size):

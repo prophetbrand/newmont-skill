@@ -124,6 +124,24 @@ class SourcesTest(unittest.TestCase):
         self.assertIsNone(brand_sources.edition("no date here"))
 
 
+class LogoTest(unittest.TestCase):
+    def test_extract_logo_from_executive_summary(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = brand_sources.extract_logo(os.path.join(d, "logo.png"))
+            self.assertEqual(os.path.basename(r["native"]), "logo.emf")
+            self.assertEqual(r["found_on"], "master 0")
+            self.assertGreater(os.path.getsize(r["native"]), 0)
+            if r["png"]:  # converted only when soffice is on PATH
+                with open(r["png"], "rb") as f:
+                    self.assertEqual(f.read(4), b"\x89PNG")
+            self.assertEqual(sorted(os.listdir(d)), sorted(os.path.basename(p) for p in (r["native"], r["png"]) if p))
+
+    def test_no_picture_raises(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(brand_sources, "_pictures", side_effect=lambda shapes: iter(())):
+            with self.assertRaisesRegex(brand_sources.SourceError, "No picture found"):
+                brand_sources.extract_logo(os.path.join(d, "logo.png"))
+
+
 if __name__ == "__main__":
     unittest.main()
 

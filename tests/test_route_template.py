@@ -77,6 +77,21 @@ class RouteTest(unittest.TestCase):
             r = self.check(text, DV, unattended=True)
             self.assertEqual(r["matched"][ES], [], text)
 
+    def test_financial_and_reporting_cues(self):
+        r = self.check("the quartlery financials deck for the exec team with an executive summary slide and a "
+                       "comparison table", DV)
+        self.assertEqual(r["matched"][DV], ["financials"])
+        for text in ("Q3 financial update", "monthly report for the board", "results update for Boddington",
+                     "performance reporting pack", "quarterly review deck"):
+            self.check(text, DV)
+
+    def test_quarterly_is_weak(self):
+        r = self.check("a quarterly strategy refresh", ES)
+        self.assertEqual(r["matched"][DV], [])
+        self.check("a quarterly deck", None, ask=True)
+        r = self.check("quarterly financials deck", DV)
+        self.assertEqual(r["matched"][DV], ["financials", "quarterly"])
+
     # rule 4: both / neither
     def test_project_progress_update_asks(self):
         r = self.check("project progress update deck", None, ask=True)

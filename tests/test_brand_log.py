@@ -55,6 +55,18 @@ class LogTest(unittest.TestCase):
         self.assertTrue(b["clarifying_question_asked"])
         self.assertEqual([e["request"] for e in brand_log.tail(1)], ["b"])
 
+    def test_rebuild_replaces_last_line(self):
+        brand_log.log_request(request="a", output="/x/a.pptx", notes="first")
+        brand_log.log_request(request="b", output="/x/b.pptx", notes="first")
+        brand_log.log_request(request="b", output="/x/b.pptx", notes="rebuild")
+        self.assertEqual([(e["request"], e["notes"]) for e in self.lines()], [("a", "first"), ("b", "rebuild")])
+        brand_log.log_request(request="a", output="/x/a.pptx", notes="again")  # not the last line: appended
+        brand_log.log_request(request="b", output="/x/other.pptx")  # different output: appended
+        brand_log.log_request(request="b")  # no output: never deduped
+        brand_log.log_request(request="b")
+        self.assertEqual([e["request"] for e in self.lines()], ["a", "b", "a", "b", "b", "b"])
+        self.assertEqual(os.listdir(os.path.dirname(self.log)), ["requests.jsonl"])  # no temp file left
+
 
 if __name__ == "__main__":
     unittest.main()

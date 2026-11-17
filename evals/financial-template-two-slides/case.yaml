@@ -3,10 +3,9 @@ name: financial-template-two-slides
 expected_outcome: |
   A template request: the person wants exactly two content slides for quarterly financials
   and reporting, no cover or closing, with placeholders. This is business and performance
-  reporting, so the deck is on the Detailed View template; the router finds no cue in this
-  wording ("quartlery financials" is not in its list) and "executvive summary slide" names the
-  purpose of a slide, not the Executive Summary template, so a good run either picks Detailed
-  View and says why it departs from the router, or asks only the router's template question. Slide 1 is a summary on
+  reporting, so the deck is on the Detailed View template; the router matches "financials" in this
+  wording and "executvive summary slide" names the purpose of a slide, not the Executive
+  Summary template, so a good run follows the router to Detailed View without asking. Slide 1 is a summary on
   `Key Metrics`, `Ex Summary`, `Overall Highlights` or `ScoreCard Tables`; slide 2 is the
   financial table on `Financial Performance (full Portfolio)` (or `Cost Summary` /
   `Performance Against Plan`) with periods and a delta column. No metric is repeated in full

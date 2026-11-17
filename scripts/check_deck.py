@@ -8,7 +8,8 @@ placeholder-linked frames) on any slide unless listed in --free-form-slides ("PH
 reported, not failed); no empty placeholders; explicit fonts from brand-values.json (inherited theme fonts are fine);
 explicit RGB colours on slide-level shapes, text and charts in the brand-values.json palette or its template-neutral
 greys (colours inside the layouts are the template's and are not checked); flat shapes; footer = deck name;
-slide-number field wherever the layout has a SLIDE_NUMBER placeholder; required text; slide count.
+slide-number field wherever the layout has a SLIDE_NUMBER placeholder; no "Click to add" or "Lorem ipsum" text;
+required text (case-sensitive; whitespace, dashes and quotes normalised); slide count.
 Prints PASS/FAIL per rule and exits 1 when any rule FAILs; fix every FAIL before delivering. Needs python-pptx."""
 import argparse, json, os, re, sys, zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -20,11 +21,17 @@ PALETTE = {c["hex"].upper() for c in _P["primary"] + _P["secondary"] + _P["tints
     c.upper() for c in VALUES["template_neutral_colours"]}
 FONTS = {VALUES["fonts"]["deck"], VALUES["fonts"]["accent"]}
 REPLACE_BOXES = {"PHOTO: replace", "CHART: replace", "TABLE: replace"}  # drawn by newmont_deck for missing content
+PLACEHOLDER_TEXT = re.compile(r"click to add|lorem ipsum", re.I)  # template prompt and filler text left behind
 BAD_GEOM = {"roundRect", "round1Rect", "round2SameRect", "round2DiagRect", "snipRoundRect"}
 
 
+def norm_case(s):
+    """Whitespace, dash and quote normalisation only: case is kept (required text must match its case)."""
+    return re.sub(r"\s+", " ", (s or "").replace("–", "-").replace("—", "-").replace("’", "'").replace("‘", "'")).strip()
+
+
 def norm(s):
-    return re.sub(r"\s+", " ", (s or "").replace("–", "-").replace("—", "-").replace("’", "'").replace("‘", "'")).strip().lower()
+    return norm_case(s).lower()
 
 
 def ev(items, n=5):
@@ -150,6 +157,10 @@ def main():
            if ph._element.tag.endswith("}sp") and not ph.text_frame.text.strip()]
     add("No empty placeholders (no 'Click to add' prompts)", not bad, ev(bad) or "none left")
 
+    bad = ["slide %d: %r" % (i, t[:60]) for i, s in enumerate(pslides, 1)
+           for t in s._element.xpath(".//a:t/text()") if PLACEHOLDER_TEXT.search(t)]
+    add("No slide text contains 'Click to add' or 'Lorem ipsum'", not bad, ev(bad) or "none")
+
     cfonts, ccolours = chart_xml_issues(a.file)
     bad = [loc(sl, sh, " run %r uses %s" % (r["text"][:30], r["font"])) for sl in slides for sh in sl["shapes"]
            for r in sh.get("runs", []) if r["text"].strip() and r["font"] and r["font"] not in FONTS] + cfonts
@@ -208,11 +219,11 @@ def main():
         ("no slidenum field: " + ev(bad)) if bad else "%d slide numbers ok" % nn)
 
     if a.required_text:
-        alltext = norm(" ".join(r["text"] for sl in slides for sh in sl["shapes"] for r in sh.get("runs", [])))
+        alltext = norm_case(" ".join(r["text"] for sl in slides for sh in sl["shapes"] for r in sh.get("runs", [])))
         with open(a.required_text, encoding="utf-8") as f:
-            lines = [norm(l) for l in f.read().splitlines() if l.strip()]
+            lines = [norm_case(l) for l in f.read().splitlines() if l.strip()]
         miss = [l for l in lines if l not in alltext]
-        add("Every required text line appears verbatim in the deck", not miss,
+        add("Every required text line appears verbatim (case-sensitive) in the deck", not miss,
             ("missing %d of %d: " % (len(miss), len(lines)) + ev(miss)) if miss else "all %d lines found" % len(lines))
     finish()
 

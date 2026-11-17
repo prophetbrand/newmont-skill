@@ -72,7 +72,7 @@ Its rules, which you follow rather than re-derive:
 - **Fits both, or neither:** ask the one clarifying question the router prints, and nothing else in that message beyond the intake questions you already owe. If no one can answer (an unattended run, or the person has said to proceed with defaults), it defaults to Executive Summary; your reply then opens with the template chosen and the reason the router gave.
 - Detailed View layouts are also present inside the Executive Summary file (its "Everyday" master). Use one from there only when a single slide of a storytelling deck needs it (a scorecard in a strategy deck); the kit logs it as a cross-template layout.
 
-The log entry records the template, the reason and whether the question was asked. Do not override the router silently: if you disagree with its choice, say why in the reply and log your choice as the reason.
+The log entry records the template, the reason and whether the question was asked. Do not override the router silently: if you disagree with its choice, say why in the reply and log your choice as the reason. When it matched nothing, apply the two lists above yourself before accepting the default: a deck of figures, results, costs, headcount or a scorecard is Detailed View even when the words are misspelt or unusual ("the quartlery financials"). A request for "an executive summary slide" names a slide, not the Executive Summary template.
 
 ## Before you build: the inputs this skill cannot supply
 
@@ -82,7 +82,7 @@ The template reproduces whatever it is given, including guesses. Most bad output
 
 | Input | Why it blocks | If the person cannot supply it |
 |---|---|---|
-| **The content**: the actual points, figures, data, or a source document | A Newmont deck is read as fact. Never invent statistics, results, names or dates. | Offer to build the structure with bracketed placeholders like `[TRIFR 0.0]` and list every placeholder in the reply. |
+| **The content**: the actual points, figures, data, or a source document | A Newmont deck is read as fact. Never invent statistics, results, names or dates. | Offer to build the structure with bracketed placeholders and list every placeholder in the reply. A placeholder shows its format, `[0,000 koz]`, `[+0.0%]`, `[$0.0B]`, `[DD Month YYYY]`, never a bare `[0]`. Brackets the person wrote themselves ("From: [Your name]") are placeholders they intend; keep them as given and do not ask about them. |
 | **The template**, when the router asks | The two templates have different layouts; a scorecard built on Executive Summary columns is the wrong deck. | Default to Executive Summary and say so. |
 | **Deck name and date** | The deck name is the footer of every slide and the date sits under the cover title. | Propose one from the subject ("Newmont – Q3 2026 Safety Performance", the current month) and mark it a proposal. |
 
@@ -91,6 +91,10 @@ The template reproduces whatever it is given, including guesses. Most bad output
 - Length: what the content needs, one idea per slide. Say the slide count.
 - Photos: the covers and closings carry their own photographs, so none are needed for a standard deck. Picture layouts (Progress Pictures, Images & Messaging, Big statement with image, Thank you Opt 5) need real files; without them, avoid those layouts or build them with the kit's "PHOTO: replace" box and list it as a placeholder. Never fetch, generate or tint images.
 - Spelling: match the person's writing; otherwise US (the guidelines are US).
+- A colour, font or element the person asks for that is outside the system: build it as asked and state in one line that it departs from the Newmont system; do not ask whether they meant it. Only what the person asked for counts as a departure; your own choices follow the system, and a size or colour you picked is never reported as one. Text on a requested off-system band uses whichever of white or dark blue passes contrast on it.
+- When you invent structure the brief did not give (metric rows, table columns, section names), list those items in the reply as suggestions to swap, separately from the placeholders.
+- A date whose weekday does not match the calendar, or any other small inconsistency in the brief: use the brief as written and flag it in one line; do not ask.
+- Each metric appears once in a deck: as a tile, a table row or a chart, with later slides adding periods or detail, never the same figure repeated.
 - Audience and purpose: infer from the request.
 - File name: from the subject, lowercase with hyphens.
 - Everything the template decides: fonts, sizes, colours, logo, footer layout. Asking about these wastes the person's time.
@@ -117,13 +121,13 @@ Pick the layout from the shape of the content, not from taste, so the same brief
 | One claim that stands alone | `Statement`; with a photo: `Big statement with image - Dark Blue` (`Light`, `Light Blue`) | ~300 characters; picture needs a file |
 | A story and its conclusion | `Story / Summary` | story ~130, conclusion ~80 characters |
 | Two, three or four parallel points | `Two/Three/Four Column Panels` (`… Panels Icon` only with icon files); plain text: `Two/Three/Four Column` | 2–3 short paragraphs per panel, ~250 characters at three |
-| Headed comparison (before/after, option A/B, risks/mitigations) | `Two/Three/Four Column Comparison` | header one line; body ~320 characters per column |
+| Headed comparison (before/after, option A/B, risks/mitigations) | `Two Column Comparison`; three or four options: `Three/Four Column Comparison` | header one line; body ~320 characters at two columns, ~250 at three, ~175 at four. Risks with mitigations always pair in `Two Column Comparison` (risk left, mitigation right), up to four pairs per slide, a fifth pair starts a second slide of the same layout |
 | One chart | `Single chart with lead-in text`; with commentary: `Single chart with supporting text` | ≤ 8 categories; ≤ 7 bullets |
 | Two to six charts | `Two charts`, `Three charts`, `Four charts`, `Six charts`, each also `… with supporting text` | one header line per chart |
 | A table | `Title Sub and Content` (lead-in + table) or `Title and Content` | ≤ 12 rows; two tables: `Two Content` |
 | Several small tables or KPI tiles | `Four Content Sub` | ≤ 5 rows each |
-| A process, timeline or framework | `Title Sub and Content` with a timeline table; otherwise a free-form slide on `Title Only` (say so) | |
-| The close | `Thank you Opt 1` (`Opt 5` with own photos) | one or two words |
+| A process, timeline or framework | `Title Sub and Content` with a timeline table whose columns are always Phase, When, What happens, Owner (drop Owner only when the brief has none); a drawn process is a free-form slide on `Title Only` (say so) | ≤ 8 rows |
+| The close | `Thank you Opt 1`; `Thank you Opt 5` only when the person supplied two photo files for it | one or two words |
 
 **Detailed View (business and performance reporting)**
 
@@ -139,7 +143,7 @@ Pick the layout from the shape of the content, not from taste, so the same brief
 | Executive summary narrative with call-outs | `Ex Summary` | narrative ~700 characters; 6 call-outs |
 | Scorecard: KPI strips, small charts, commentary | `ScoreCard`; tables only: `ScoreCard Tables` | tables 2–3 rows; 4 bullets |
 | KPI tiles | `Key Metrics` (7 tiles) | one metric and 1–2 lines each |
-| Financial table | `Financial Performance (full Portfolio)`; costs: `Cost Summary` | ≤ 14 rows |
+| Financial table | `Financial Performance (full Portfolio)`; costs: `Cost Summary` | ≤ 14 rows; columns are this period, prior period, same period last year, then a change column against the prior period, with the unit in the first header cell; rows grouped Operating, Financial, Balance sheet |
 | Chart with table and commentary | `Performance Against Plan` / `… 2`; six charts: `Summary Financial Metrics` | |
 | Balance sheet and dividend | `Balance Sheet & Dividend Review` | two charts, 2 bullets each |
 | Investor relations | `QBR: Investor Relations Update` | ~8 bullets per column |
@@ -154,6 +158,7 @@ Rules:
 
 - **Named layouts only.** A free-form slide (`free_slide`, on `Title Only`) is allowed only when no layout fits (a drawn process, a map); name it in the reply and it is logged as free-form. Never rebuild a layout by hand.
 - One idea per slide. When text exceeds a limit, shorten or split it onto a second slide of the same layout; never shrink the type or move the placeholders.
+- **The person's words are kept word for word**, including capitalisation, labels and order, on every slide and in every format, not only when restyling. Titles you write yourself follow the voice rules; titles and text they gave do not get recased or relabelled. The `--required-text` file you hand the checker is their text exactly as given, never an edited copy.
 - Titles are one-sentence statements in sentence case, ≤ 2 lines. When the brief gives none, write each from that slide's own content and list them under the assumptions.
 - Every deck: cover, content slides, closing; agenda when it has four or more sections; dividers only in decks of 8+ slides.
 - Default outlines when only a topic is given (figures to come or placeholders agreed), fixed so two builds match. Executive Summary, 8 slides: cover; `Statement` with the headline; `Agenda`; `Three Column Panels` with the themes; `Two Column Comparison` (what is working / what needs attention); `Single chart with supporting text` (chart marked "CHART: replace" without data); `Title Sub and Content` with the plan as a table; `Thank you Opt 1`. Detailed View, 8 slides: cover; `Purpose`; `Overall Highlights`; `ScoreCard Tables` with the headline figures against prior period and target; `Quarterly Performance`; `Highlights, Risks & Mitigations`; `Outlook`; `Thank you Opt 1`. Drop a slide only when the person asks for a shorter deck, and say which.
@@ -168,7 +173,7 @@ From the Brand Identity Guidelines, October 2025 (`references/brand-guidelines-2
 - **Type.** Open Sans is the template theme and the deck font; Montserrat is approved for chart titles, pull quotes and subtext but the templates do not use it, so keep Open Sans in decks and use Montserrat only in other formats where the guidelines name it. Approved weights: Regular, Italic, SemiBold, Bold, Extra Bold. Verdana or Tahoma only in HTML email and signatures. Never set a font name on slide text; the layout inherits the theme. Charts are the exception: python-pptx charts do not inherit the theme reliably, so the kit names Open Sans on chart text and Montserrat Bold caps on a chart title, as the guidelines specify.
 - **Charts.** Flat: no bevels, shadows, gradients or 3D. Series colours in order `#0C2B82`, `#FCAF17`, `#071435`, `#3A68C5`, `#0091DA`, `#509E2F`, then the 80% tints. 0.5 pt black axis rules; 8 pt axis labels (the guidelines' 6 pt is a print minimum and unreadable on screen); no gridlines; legend at the bottom when there is more than one series; pie slices separated by white gaps with the value labelled outside each slice in navy (inside, labels vanish on the dark slices); the chart heading goes in the layout's header placeholder, not in the chart. The kit's chart builder does all of this; a chart with no data yet is passed as `None` and drawn as a box marked "CHART: replace".
 - **Gradients and patterns.** Data graphics stay flat. The two approved background gradients (287→282, 2386→287) and the topographic line pattern are used only where a layout already carries them; do not add them to content slides.
-- **Logo artwork for other formats.** None of the three sources ships a stand-alone logo file. For Word, HTML or email, ask the person for the approved artwork (Corporate Communications supplies it); if they say to proceed without it, use the logo image embedded in the template master and say in the reply that it was extracted from the template, not an approved logo file.
+- **Logo artwork for other formats.** None of the three sources ships a stand-alone logo file. For Word, HTML or email, use the logo image embedded in the template master (`scripts/brand_sources.py --logo out.png` extracts it) and say in the reply that it came from the template, not from an approved logo file; Corporate Communications can supply the artwork later. This is decide-and-state: never stop to ask for a logo.
 - **Photography.** Real Newmont operations and people, documentary and unfiltered, hi-vis and white branded hard hats, natural light. Covers and closings have theirs baked in. Never stock-looking, generated, duotoned or tinted images; a white 90% overlay or an approved gradient overlay is the only treatment, and only where a layout provides it.
 - **Logo.** It is in the layouts; never add a second one, redraw it, recolour the triangle or add effects. Clear space is half the height of the N. Monogram alone is fine internally.
 - **Legal name and boilerplate.** "Newmont Corporation" in formal titles, legal copy and the footers of documents (deck footers carry the deck name; the layouts already print the company name); "Newmont" or "the Company" in sentences. The approved boilerplate paragraph is in the reference (section 1); use it verbatim when a deck needs company description.
@@ -224,16 +229,18 @@ Run `d.roles('<layout>')` for any layout before filling it the first time; the r
 
 ```bash
 python3 scripts/check_deck.py deck.pptx --template executive_summary --deck-name "Newmont – Tailings Strategy" [--free-form-slides 5] [--required-text brief.txt] [--expect-slides 8]
-soffice --headless --convert-to pdf --outdir out deck.pptx
+soffice -env:UserInstallation=file:///tmp/lo-profile --headless --convert-to pdf --outdir render deck.pptx   # or d.save(path, render=True)
 ```
 
 Both `--template` and `--deck-name` are required, and the checker exits 1 on any FAIL. It confirms that the deck's master is the chosen template's (theme name) and every slide uses one of its named layouts, that no slide carries free shapes except those listed as free-form, that no empty placeholder prompts remain, that any font or colour you set explicitly is approved, that nothing you added has a shadow, gradient, 3D or rounded corner, that the footer carries the deck name and the page number field is present, the slide size, and the required text. Fix every FAIL. Then open the rendered pages and check what the script cannot: no text overflows its placeholder, titles are ≤ 2 lines, charts are legible, nothing overlaps the baked-in photos.
 
 ## Reply format
 
+Deliver only the deck, the build script and the run record. Renders go in a `render/` folder, the LibreOffice profile outside the working folder, and nothing else is left behind: no proxy decks, stray PDFs, copied kits or virtual environments.
+
 Open with: the template chosen and why (the router's reason, and whether a question was asked or the default applied); the source versions used (from `brand_sources.py`); then assumptions and placeholders, if any. Then the slides built (number, layout name, title), any free-form slide and why, what was checked (checker run, rendered and looked at, or why not; whether Open Sans was installed for the preview), and any departure from the system in one line each. Do not describe the brand rules back to the person.
 
-The kit writes the log line on `save()`. When no deck is saved, log by hand, for example:
+The kit writes the log line on `save()` (a rebuild of the same request to the same file replaces the earlier line). When no deck is saved, log by hand with the template as routed (or none), `--asked` when you stopped on a question, no output, and a note saying why you stopped, for example:
 
 ```bash
 python3 scripts/brand_log.py --request "put this into slides for the QBR" --activated --activation-path "indirect: put into slides" --template detailed_view --reason "Matched Detailed View cues: QBR." --notes "stopped to ask for the figures"
@@ -248,7 +255,7 @@ Rebuild it on the routed template rather than patching fonts and colours in plac
 
 ## Other formats (only when explicitly asked for in Newmont style)
 
-Apply the guidelines PDF directly; there is no approved template for these in the sources, so say so and name the guideline sections used.
+Apply the guidelines PDF directly; there is no approved template for these in the sources, so say so and name the guideline sections used by the numbered headings of `references/brand-guidelines-2025-10.md` (for example "3 Colour, 7 Typography, 8 Standard document").
 
 - **Word, PDF, Docs.** Standard document (guidelines p30): a dark navy header band with the reversed logo left; title Open Sans Bold 20/21 pt navy; intro Open Sans Light 15/21 pt; section heads Montserrat Regular 10/12 pt caps with 0.5 pt letter-spacing in `#0C2B82`; body Open Sans Regular 9/12 pt; footer "NEWMONT CORPORATION" in Montserrat caps left, page number right. Report or memo (p31): monogram top-left, a Montserrat 10 pt caps label in `#3A68C5`, title Open Sans Bold 20/27 pt, section heads Open Sans Regular 14 pt caps, lead 12/16 pt, body 9/12 pt, footer "NEWMONT CORPORATION | [DOCUMENT TITLE]" left and "DATE | PAGE x OF y" right above a rule. Tables: dark blue header row with white bold text, 0.5 pt grey rules. Call-outs on `#D9E8EC`.
 - **Excel.** Open Sans throughout, header row `#0C2B82` with white bold text, no banding or borders other than 0.5 pt `#A3A7AA` rules, numbers right-aligned with units in the header, charts styled as above.

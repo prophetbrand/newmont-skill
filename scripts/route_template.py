@@ -14,8 +14,10 @@ DETAILED_CUES = ("business review", "QBR", "quarterly business review", "monthly
                  "progress update", "progress pictures", "cost summary", "balance sheet", "dividend", "highlights",
                  "risks and mitigations", "performance", "safety performance", "safety results",
                  "operating results", "results review", "dashboard",
-                 "operations review", "ops review")
-DETAILED_WEAK = ("outlook",)  # counts only alongside a strong Detailed View cue
+                 "operations review", "ops review", "financials", "financial summary", "financial update",
+                 "financial reporting", "financial review", "performance reporting", "quarterly report",
+                 "quarterly update", "quarterly review", "monthly report", "monthly update", "results update")
+DETAILED_WEAK = ("outlook", "quarterly")  # count only alongside a strong Detailed View cue
 EXEC_CUES = ("strategy", "strategic", "proposal", "pitch", "business case", "project update", "project kickoff",
              "explainer", "training", "onboarding", "workshop", "narrative", "framework", "roadmap", "timeline",
              "recommendation", "lessons learned")
