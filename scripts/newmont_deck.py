@@ -116,6 +116,20 @@ def layout_roles(layout):
     return roles
 
 
+def strip_sample_slides(prs):
+    """Drop every slide (sldId, its relationship and the stale section list) from an open Presentation. python-pptx
+    writes only parts reachable through relationships, so the sample slides' media, charts and embedded workbooks
+    are not saved either; masters, layouts and the theme are untouched."""
+    pres = prs.part._element
+    lst = pres.find(qn("p:sldIdLst"))
+    for sld in list(lst) if lst is not None else []:  # a blank presentation has no sldIdLst at all
+        rid = sld.get(qn("r:id"))
+        lst.remove(sld)
+        prs.part.drop_rel(rid)
+    for sec in list(pres.iter("{http://schemas.microsoft.com/office/powerpoint/2010/main}sectionLst")):
+        sec.getparent().getparent().remove(sec.getparent())  # the p:ext holding the stale section list
+
+
 class Deck:
     def __init__(self, template, deck_name, date=None, request="", routing=None, *, activation_path=None, asked=False):
         if not (activation_path or "").strip():
@@ -140,14 +154,7 @@ class Deck:
         self.used, self.free = [], set()
 
     def _delete_samples(self):
-        pres = self.prs.part._element
-        lst = pres.find(qn("p:sldIdLst"))
-        for sld in list(lst):
-            rid = sld.get(qn("r:id"))
-            lst.remove(sld)
-            self.prs.part.drop_rel(rid)
-        for sec in list(pres.iter("{http://schemas.microsoft.com/office/powerpoint/2010/main}sectionLst")):
-            sec.getparent().getparent().remove(sec.getparent())  # the p:ext holding the stale section list
+        strip_sample_slides(self.prs)
 
     def _layout(self, name):
         if name not in self.layouts:

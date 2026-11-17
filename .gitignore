@@ -12,3 +12,4 @@ out/demo-*.pptx
 out/demo-*.pdf
 out/*.run.json
 dist/
+screen-use-run/

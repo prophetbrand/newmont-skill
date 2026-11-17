@@ -7,7 +7,8 @@ expected_outcome: |
   with a timeline table (phases, durations, headings, steps) or a free-form slide on
   `Title Only` that the reply names as free-form with the reason and the run record marks
   `free-form:`; the checker is then run with --free-form-slides 3. Slide 4 is
-  `Thank you Opt 5` with people.jpg in its picture placeholder. Cover on a `1_Cover slide Opt 1`
+  `Thank you Opt 1`, whose photograph is built in, because `Thank you Opt 5` needs two supplied
+  photos and the brief gives one; the reply says people.jpg was not used on the close and why. Cover on a `1_Cover slide Opt 1`
   variant with its own photo. No empty placeholders, no fetched or generated images, every
   line of the brief verbatim, the run record lists the layouts, the reply quotes versions.
 context:

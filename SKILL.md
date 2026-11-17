@@ -89,7 +89,7 @@ The template reproduces whatever it is given, including guesses. Most bad output
 **Decide and state.** Use the default, name it at the top of the reply, do not ask.
 
 - Length: what the content needs, one idea per slide. Say the slide count.
-- Photos: the covers and closings carry their own photographs, so none are needed for a standard deck. Picture layouts (Progress Pictures, Images & Messaging, Big statement with image, Thank you Opt 5) need real files; without them, avoid those layouts or build them with the kit's "PHOTO: replace" box and list it as a placeholder. Never fetch, generate or tint images.
+- Photos: the covers and closings carry their own photographs, so none are needed for a standard deck. Picture layouts (Progress Pictures, Images & Messaging, Big statement with image, Thank you Opt 5) need real files, one per picture placeholder; without enough of them, avoid the layout (the close always has a fallback: Opt 1), or, for a content slide the person asked for by name, build it with the kit's "PHOTO: replace" box and list it as a placeholder. Never fetch, generate or tint images.
 - Spelling: match the person's writing; otherwise US (the guidelines are US).
 - A colour, font or element the person asks for that is outside the system: build it as asked and state in one line that it departs from the Newmont system; do not ask whether they meant it. Only what the person asked for counts as a departure; your own choices follow the system, and a size or colour you picked is never reported as one. Text on a requested off-system band uses whichever of white or dark blue passes contrast on it.
 - When you invent structure the brief did not give (metric rows, table columns, section names), list those items in the reply as suggestions to swap, separately from the placeholders.
@@ -127,7 +127,7 @@ Pick the layout from the shape of the content, not from taste, so the same brief
 | A table | `Title Sub and Content` (lead-in + table) or `Title and Content` | ≤ 12 rows; two tables: `Two Content` |
 | Several small tables or KPI tiles | `Four Content Sub` | ≤ 5 rows each |
 | A process, timeline or framework | `Title Sub and Content` with a timeline table whose columns are always Phase, When, What happens, Owner (drop Owner only when the brief has none); a drawn process is a free-form slide on `Title Only` (say so) | ≤ 8 rows |
-| The close | `Thank you Opt 1`; `Thank you Opt 5` only when the person supplied two photo files for it | one or two words |
+| The close | `Thank you Opt 1` (its photograph is built in); `Thank you Opt 5` only when the person supplied two photo files for it. With one photo or none, use Opt 1 and say the supplied photo was not used and why; never leave a "PHOTO: replace" box on the close | one or two words |
 
 **Detailed View (business and performance reporting)**
 
@@ -238,7 +238,7 @@ Both `--template` and `--deck-name` are required, and the checker exits 1 on any
 
 Deliver only the deck, the build script and the run record. Renders go in a `render/` folder, the LibreOffice profile outside the working folder, and nothing else is left behind: no proxy decks, stray PDFs, copied kits or virtual environments.
 
-Open with: the template chosen and why (the router's reason, and whether a question was asked or the default applied); the source versions used (from `brand_sources.py`); then assumptions and placeholders, if any. Then the slides built (number, layout name, title), any free-form slide and why, what was checked (checker run, rendered and looked at, or why not; whether Open Sans was installed for the preview), and any departure from the system in one line each. Do not describe the brand rules back to the person.
+The first line of the reply is the template line: the template chosen and why (the router's reason, and whether a question was asked or the default applied). Nothing comes before it, not a greeting and not a "your deck is ready" sentence; the file name and slide count belong with the slides built. Then the source versions used (from `brand_sources.py`); then assumptions and placeholders, if any. Then the slides built (number, layout name, title), any free-form slide and why, what was checked (checker run, rendered and looked at, or why not; whether Open Sans was installed for the preview), and any departure from the system in one line each. Do not describe the brand rules back to the person.
 
 The kit writes the log line on `save()` (a rebuild of the same request to the same file replaces the earlier line). When no deck is saved, log by hand with the template as routed (or none), `--asked` when you stopped on a question, no output, and a note saying why you stopped, for example:
 

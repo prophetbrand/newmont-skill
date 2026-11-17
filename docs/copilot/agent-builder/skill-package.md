@@ -39,7 +39,7 @@ Two kept sections still sit in SKILL.md as headings, but their text is in `refer
 ## What to test first, in this order
 
 1. **Import check.** Ask: "Run `python3 -c "import pptx"` and `python3 -c "import pymupdf"` in your sandbox and tell me the output." If either fails, the skill should say the deck cannot be built here and offer the outline and layout list. It must not draw slides by hand. Record the result: this answers whether python-pptx is preinstalled.
-2. **One Executive Summary build.** Run only if step 1 passed. Use suggested prompt 2 ("Build a short deck explaining our water stewardship strategy to site leaders.") with the full brief from `evals/routing-strategy-exec-summary/prompt.md`. Expect Executive Summary, the source versions in the reply, and a downloadable .pptx. Download it in the same session, then run `check_deck.py` on it locally (see `test-plan.md`).
+2. **One Executive Summary build.** Run only if step 1 passed. Use suggested prompt 2 ("Build a short deck explaining our water stewardship strategy to site leaders.") with the full brief from `evals/routing-strategy-exec-summary/prompt.md`. Expect Executive Summary, the source versions in the reply, and the .pptx in OneDrive under `Documents/Copilot/Created/` (the reply's download link is minted under the agent's identity and may open as 'no access'; the OneDrive copy is the one to use). Run `check_deck.py` on the synced copy locally (see `test-plan.md`).
 3. **Detailed View stop.** Run suggested prompt 1 ("put this into slides for the QBR"). Expect the reply to say the Detailed View template is not available in this package, with nothing built.
 
 ## What will not work

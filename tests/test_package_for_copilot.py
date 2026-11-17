@@ -9,9 +9,10 @@ import package_for_copilot as pkg
 from test_brand_sources import make_pdf, make_pptx
 
 ENV_KEYS = ("NEWMONT_BRAND_SOURCES", "NEWMONT_BRAND_LOG", "NEWMONT_BRAND_CONFIG", "NEWMONT_BRAND_VALUES")
+DV_NAME = "Newmont_PPT Template_Detailed View_Feb_2026.pptx"
 EXPECTED = ["SKILL.md", pkg.MOVED_FILE, "brand-values.json", "brand-sources.json",
             "brand-sources/Brand Guidelines October 2025.pdf",
-            "brand-sources/Newmont_PPT Template_Executive Summary_Feb_2026.pptx"] + \
+            "brand-sources/Newmont_PPT Template_Executive Summary_Feb_2026.pptx", "brand-sources/" + DV_NAME] + \
            ["scripts/" + s for s in pkg.SCRIPTS] + ["references/" + r for r in pkg.REFERENCES]
 REAL_DV = os.path.join(ROOT, "brand-sources", "Newmont_PPT Template_Detailed View_Feb_2026.pptx")
 
@@ -29,7 +30,8 @@ def run_packager(out, config=None, *args):
 
 
 class PackageTest(unittest.TestCase):
-    """Synthetic sources: a small guidelines PDF and Executive Summary, and a Detailed View padded past 25 MB."""
+    """Synthetic sources: a small guidelines PDF and Executive Summary, and a Detailed View padded past 25 MB with an
+    orphan part, which the sample-slide strip drops, so the packaged copy is small."""
 
     @classmethod
     def setUpClass(cls):
@@ -73,18 +75,21 @@ class PackageTest(unittest.TestCase):
         self.assertLess(sum(i.file_size for i in infos), 50_000_000)
         self.assertLess(os.path.getsize(self.zip), 50_000_000)
 
-    def test_expected_files_and_no_detailed_view(self):
+    def test_expected_files_including_slimmed_detailed_view(self):
         with zipfile.ZipFile(self.zip) as z:
             names = z.namelist()
+            dv = z.getinfo("brand-sources/" + DV_NAME).file_size
         self.assertEqual(sorted(names), sorted(EXPECTED))
-        self.assertFalse(any("Detailed View" in n for n in names))
+        self.assertLess(dv, 1_000_000)
 
-    def test_detailed_view_warning(self):
-        self.assertIn("WARNING: skipping detailed_view", self.result.stderr)
-        self.assertIn("over the 25 MB per-file limit", self.result.stderr)
+    def test_detailed_view_derived_note(self):
+        self.assertIn("NOTE: %s is 26.0 MB; packaging it without its sample slides" % DV_NAME, self.result.stderr)
+        self.assertNotIn("WARNING: skipping", self.result.stderr)
         with open(os.path.join(self.extracted, "SKILL.md"), encoding="utf-8") as f:
             skill = f.read()
-        self.assertIn("PowerPoint Template – Detailed View is not available in this package", skill)
+        self.assertIn("sample slides removed", skill)
+        self.assertIn("PowerPoint Template – Detailed View is a derived copy", skill)
+        self.assertNotIn("is not in this package", skill)
         self.assertIn('python3 -c "import pptx"', skill)
 
     def test_skill_md_sections(self):
@@ -100,29 +105,32 @@ class PackageTest(unittest.TestCase):
                      "pip install", "**Setup check**"):
             self.assertNotIn(gone, skill)
         self.assertIn("sys.path.insert(0, 'scripts')  # this skill's scripts/", skill)
+        self.assertIn("d.save('/tmp/newmont-work/tailings-strategy.pptx')", skill)
+        self.assertIn("**One save per deck.**", skill)
         self.assertIn("| `Two Column Comparison`", moved)
         self.assertIn("**Colour.**", moved)
+        self.assertIn("## Reply format", moved)
+        self.assertNotIn("End every reply with", skill.split("## Reply format")[1][:400])
 
     def test_resolve_from_extracted_zip(self):
         config = os.path.join(self.extracted, "brand-sources.json")
         with open(config, encoding="utf-8") as f:
             self.assertEqual(json.load(f)["sources_dir"], "brand-sources")
         with mock.patch.dict(os.environ, clean_env(NEWMONT_BRAND_CONFIG=config), clear=True):
-            got = brand_sources.resolve(["guidelines", "executive_summary"])
+            got = brand_sources.resolve()
             self.assertEqual(os.path.dirname(got["executive_summary"]["path"]),
                              os.path.join(self.extracted, "brand-sources"))
             self.assertEqual(got["guidelines"]["edition"], "October 2025")
-            with self.assertRaisesRegex(brand_sources.SourceError, r"Missing brand source 'detailed_view'"):
-                brand_sources.resolve(["detailed_view"])
+            self.assertLess(got["detailed_view"]["size"], 1_000_000)
 
     def test_extracted_cli(self):
         cli = [sys.executable, "-P", os.path.join(self.extracted, "scripts", "brand_sources.py")]
         ok = subprocess.run(cli + ["--role", "guidelines", "--role", "executive_summary"], env=clean_env(),
                             capture_output=True, text=True, cwd=self.tmp.name)
         self.assertEqual(ok.returncode, 0, ok.stderr)
-        missing = subprocess.run(cli, env=clean_env(), capture_output=True, text=True, cwd=self.tmp.name)
-        self.assertEqual(missing.returncode, 2)
-        self.assertIn("detailed_view", missing.stderr)
+        every = subprocess.run(cli, env=clean_env(), capture_output=True, text=True, cwd=self.tmp.name)
+        self.assertEqual(every.returncode, 0, every.stderr)
+        self.assertIn("detailed_view", every.stdout)
 
     def test_template_choice_executive_summary(self):
         out = os.path.join(self.tmp.name, "es.zip")
@@ -130,11 +138,26 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("not selected with --template executive_summary", r.stdout)
 
-    def test_template_choice_detailed_view_refused(self):
-        r = run_packager(os.path.join(self.tmp.name, "dv.zip"), self.config, "--template", "detailed_view")
-        self.assertNotEqual(r.returncode, 0)
-        self.assertIn("at least one template", r.stderr)
-        self.assertFalse(os.path.exists(os.path.join(self.tmp.name, "dv.zip")))
+    def test_template_choice_detailed_view(self):
+        out = os.path.join(self.tmp.name, "dv.zip")
+        r = run_packager(out, self.config, "--template", "detailed_view")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("not selected with --template detailed_view", r.stdout)
+        with zipfile.ZipFile(out) as z:
+            self.assertIn("brand-sources/" + DV_NAME, z.namelist())
+
+    def test_still_oversize_after_strip_is_skipped(self):
+        def fake_slim(src, dst):
+            with open(dst, "wb") as f:
+                f.write(b"\0" * 100)
+            return 25_000_000
+        with mock.patch.dict(os.environ, clean_env(NEWMONT_BRAND_CONFIG=self.config), clear=True), \
+                mock.patch.object(pkg, "slim_template", fake_slim), tempfile.TemporaryDirectory() as work:
+            data, files, missing, _ = pkg.plan("both", work)
+        self.assertIn("detailed_view", missing)
+        self.assertIn("over the 25 MB per-file limit", missing["detailed_view"][1])
+        self.assertFalse(any(DV_NAME in n for n, _ in files))
+        self.assertIn("Detailed View is not in this package", data[0][1].decode("utf-8"))
 
 
 class LimitTest(unittest.TestCase):
@@ -164,9 +187,10 @@ class RealSourcesTest(unittest.TestCase):
             out = os.path.join(tmp, "newmont-brand-copilot-skill.zip")
             r = run_packager(out)
             self.assertEqual(r.returncode, 0, r.stderr)
-            self.assertIn("WARNING: skipping detailed_view", r.stderr)
+            self.assertIn("packaging it without its sample slides", r.stderr)
             with zipfile.ZipFile(out) as z:
                 self.assertEqual(sorted(z.namelist()), sorted(EXPECTED))
+                self.assertLess(z.getinfo("brand-sources/" + DV_NAME).file_size, 25_000_000)
                 self.assertLess(len(z.read("SKILL.md").decode("utf-8")), 20_000)
                 self.assertTrue(all(i.file_size < 25_000_000 for i in z.infolist()))
             self.assertLess(os.path.getsize(out), 50_000_000)
