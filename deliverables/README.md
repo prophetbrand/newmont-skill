@@ -4,14 +4,20 @@ Everything Newmont IT needs to stand the agent up, in one folder. Nothing here d
 
 ## What is here
 
-| File | What it is | Use it for |
+| Folder or file | What it is | Use it for |
 |---|---|---|
-| `newmont-brand-copilot-studio.zip` | The skill package for Microsoft Copilot Studio (11.6 MB zip, 12.6 MB of members). Holds SKILL.md, the scripts, the brand references and derived copies of the three approved brand files: Brand Guidelines October 2025 and the two Feb 2026 PowerPoint templates, Detailed View and Executive Summary, both in one package. | The Copilot Studio agent (the tested and published route) |
-| `copilot-studio-instructions.txt` | The text to paste into the agent's Instructions editor in Copilot Studio (7,900 characters). | Same agent |
-| `newmont-brand-agent-builder.zip` | The same skill packaged for Agent Builder in the Microsoft 365 Copilot app (31 MB; Agent Builder allows larger files). | Only if Newmont prefers a user-created agent in the Copilot app instead of Copilot Studio |
-| `agent-builder-instructions.txt` | The text to paste into an Agent Builder agent's Instructions box (7,994 characters, limit 8,000). | Same |
-| `results-copilot-studio-suite.md` and `.xlsx` | The 14-case evaluation on Copilot Studio: results, repeatability over three runs, what was fixed, the one-agent package and the publish. The workbook has every verdict with its evidence. | Acceptance evidence |
-| `findings-copilot-in-powerpoint-route.md` | What it would take to run the agent from the Copilot pane inside PowerPoint (organization skills, Brand Kit, licence and admin prerequisites), with sources. | Deciding whether that second route is wanted |
+| `copilot-studio/newmont-brand/` | The skill package for Microsoft Copilot Studio, unpacked (12.6 MB). `SKILL.md`, `scripts/`, `references/`, `brand-sources.json`, `brand-values.json`, and `brand-sources/` with derived copies of the three approved brand files: Brand Guidelines October 2025 and the two Feb 2026 PowerPoint templates, Detailed View and Executive Summary, both in one package. | The Copilot Studio agent (the tested and published route) |
+| `copilot-studio/instructions.txt` | The text to paste into the agent's Instructions editor in Copilot Studio (7,900 characters). | Same agent |
+| `agent-builder/newmont-brand/` | The same skill packaged for Agent Builder in the Microsoft 365 Copilot app, unpacked (32 MB; Agent Builder allows larger files, so only the Detailed View template is trimmed). | Only if Newmont prefers a user-created agent in the Copilot app instead of Copilot Studio |
+| `agent-builder/instructions.txt` | The text to paste into an Agent Builder agent's Instructions box (7,997 characters, limit 8,000). | Same |
+| `results/copilot-studio-suite.md` and `.xlsx` | The 14-case evaluation on Copilot Studio: results, repeatability over three runs, what was fixed, the one-agent package and the publish. The workbook has every verdict with its evidence. | Acceptance evidence |
+| `results/copilot-in-powerpoint-route.md` | What it would take to run the agent from the Copilot pane inside PowerPoint (organization skills, Brand Kit, licence and admin prerequisites), with sources. | Deciding whether that second route is wanted |
+
+Both hosts take the skill as a zip. Make it from inside the `newmont-brand` folder so `SKILL.md` sits at the zip's root:
+
+```bash
+cd deliverables/copilot-studio/newmont-brand && zip -r -X ../newmont-brand.zip . -x '.DS_Store'
+```
 
 Recordings of agent creation, skill upload and a Preview build are in `../docs/copilot/copilot-studio/video/` (four clips, 37 MB).
 
@@ -20,8 +26,8 @@ Recordings of agent creation, skill upload and a Preview build are in `../docs/c
 Copilot Studio, the credit-powered **Agent** type, in Newmont's environment. About ten minutes.
 
 1. **Agents > New agent.** Name it (for example "Newmont Brand Agent"). Open the **Build** page.
-2. **Instructions.** Paste the whole of `copilot-studio-instructions.txt` into the Instructions editor. Paste as plain text so the paragraph breaks survive; if the editor collapses it into one paragraph, paste it again paragraph by paragraph.
-3. **Skills > Add skill > Upload a skill.** Choose `newmont-brand-copilot-studio.zip`. The skill appears as `newmont-brand` after 10 to 20 seconds. Leave Tools and Knowledge as they are, or remove "Search all websites" and "Work IQ" if Newmont wants the agent limited to the package (every test ran with the defaults present; nothing used them).
+2. **Instructions.** Paste the whole of `copilot-studio/instructions.txt` into the Instructions editor. Paste as plain text so the paragraph breaks survive; if the editor collapses it into one paragraph, paste it again paragraph by paragraph.
+3. **Skills > Add skill > Upload a skill.** Choose the zip made from `copilot-studio/newmont-brand/` (command above). The skill appears as `newmont-brand` after 10 to 20 seconds. Leave Tools and Knowledge as they are, or remove "Search all websites" and "Work IQ" if Newmont wants the agent limited to the package (every test ran with the defaults present; nothing used them).
 4. **Model.** The tests ran on the default, "Auto". If a specific model is required, set it here before testing.
 5. **Preview.** Start a new chat and send a brief (examples below). A deck takes about two minutes and costs about 50 Copilot Credits. Downloads from the Preview save under an internal id with no extension: rename the file to the deck's name with `.pptx` to open it.
 6. **Publish.** Add the **Teams + Microsoft 365** channel (availability: Microsoft Copilot and Microsoft Teams, which cannot be changed later), fill in the channel's About info (description and publisher), then Publish. Sharing, endorsement and company-wide availability are done by Newmont IT in the Microsoft 365 admin center.

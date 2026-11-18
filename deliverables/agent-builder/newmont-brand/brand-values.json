@@ -1,0 +1,47 @@
+{
+  "guidelines_edition": "October 2025",
+  "source": "Brand Guidelines October 2025.pdf: p10 palette, p15 charts, p19-20 typography. Re-digest when the PDF edition changes; do not edit from memory.",
+  "palette": {
+    "primary": [
+      {"name": "PMS 287 (dark blue)", "hex": "0C2B82", "graphics_only": false},
+      {"name": "PMS 130 (gold)", "hex": "FCAF17", "graphics_only": false}
+    ],
+    "secondary": [
+      {"name": "PMS 282 (darkest navy)", "hex": "071435", "graphics_only": false},
+      {"name": "PMS 2386 (mid blue)", "hex": "3A68C5", "graphics_only": false},
+      {"name": "PMS 2192 (bright blue)", "hex": "0091DA", "graphics_only": true},
+      {"name": "PMS 362 (green)", "hex": "509E2F", "graphics_only": true},
+      {"name": "PMS 656 (pale blue-grey)", "hex": "D9E8EC", "graphics_only": false}
+    ],
+    "tints": [
+      {"parent": "0C2B82", "pct": 80, "hex": "3D559B", "graphics_only": true},
+      {"parent": "0C2B82", "pct": 50, "hex": "8695C1", "graphics_only": false},
+      {"parent": "0C2B82", "pct": 20, "hex": "CED5E6", "graphics_only": false},
+      {"parent": "FCAF17", "pct": 80, "hex": "FDBF45", "graphics_only": false},
+      {"parent": "FCAF17", "pct": 50, "hex": "FED78B", "graphics_only": false},
+      {"parent": "FCAF17", "pct": 20, "hex": "FEEFD1", "graphics_only": false},
+      {"parent": "071435", "pct": 80, "hex": "39435D", "graphics_only": false},
+      {"parent": "071435", "pct": 50, "hex": "838A9A", "graphics_only": true},
+      {"parent": "071435", "pct": 20, "hex": "CDD0D7", "graphics_only": false},
+      {"parent": "3A68C5", "pct": 80, "hex": "6186D1", "graphics_only": true},
+      {"parent": "3A68C5", "pct": 50, "hex": "9DB3E2", "graphics_only": false},
+      {"parent": "3A68C5", "pct": 20, "hex": "D8E1F3", "graphics_only": false},
+      {"parent": "0091DA", "pct": 80, "hex": "33A7E1", "graphics_only": false},
+      {"parent": "0091DA", "pct": 50, "hex": "80C8EC", "graphics_only": false},
+      {"parent": "0091DA", "pct": 20, "hex": "CCE9F8", "graphics_only": false},
+      {"parent": "509E2F", "pct": 80, "hex": "73B159", "graphics_only": false},
+      {"parent": "509E2F", "pct": 50, "hex": "A8CF97", "graphics_only": false},
+      {"parent": "509E2F", "pct": 20, "hex": "DCECD5", "graphics_only": false},
+      {"parent": "D9E8EC", "pct": 80, "hex": "E1EDF0", "graphics_only": false},
+      {"parent": "D9E8EC", "pct": 50, "hex": "ECF3F6", "graphics_only": false},
+      {"parent": "D9E8EC", "pct": 20, "hex": "F7FAFB", "graphics_only": false}
+    ]
+  },
+  "chart_series": ["0C2B82", "FCAF17", "071435", "3A68C5", "0091DA", "509E2F", "3D559B", "39435D", "6186D1", "838A9A"],
+  "fonts": {"deck": "Open Sans", "accent": "Montserrat", "email_fallbacks": ["Verdana", "Tahoma"]},
+  "chart_axis_label_pt": 8,
+  "chart_axis_label_note": "The guideline's 6 pt print minimum is unreadable on screen; 8 pt is used for slides.",
+  "chart_axis_rule_pt": 0.5,
+  "template_neutral_colours": ["F5F6F6", "F5F7F6", "E6E9F2", "E6EAF2", "E7F6FC", "A3A7AA", "A3A7AB", "D9D9D9",
+                               "000000", "FFFFFF", "12A6E6"]
+}

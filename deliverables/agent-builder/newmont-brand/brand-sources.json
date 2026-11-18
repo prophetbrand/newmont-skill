@@ -1,0 +1,23 @@
+{
+  "sources_dir": "brand-sources",
+  "log_file": "logs/requests.jsonl",
+  "values_file": "brand-values.json",
+  "files": {
+    "guidelines": {
+      "glob": "Brand Guidelines*.pdf",
+      "kind": "pdf",
+      "label": "Brand Identity Guidelines"
+    },
+    "detailed_view": {
+      "glob": "*Template_Detailed View*.pptx",
+      "kind": "pptx",
+      "label": "PowerPoint Template – Detailed View",
+      "approved_sha256_12": "b186e9dd0245"
+    },
+    "executive_summary": {
+      "glob": "*Template_Executive Summary*.pptx",
+      "kind": "pptx",
+      "label": "PowerPoint Template – Executive Summary"
+    }
+  }
+}
