@@ -23,10 +23,20 @@ def log_request(request="", activated=False, activation_path="", template=None, 
              "request": (request or "")[:300], "activated": bool(activated), "activation_path": activation_path,
              "template": template, "routing_reason": routing_reason,
              "clarifying_question_asked": bool(clarifying_question_asked), "defaulted": bool(defaulted)}
-    try:  # the log line must be written even when the sources cannot be resolved
-        entry["sources"] = {r: s["version"] for r, s in brand_sources.manifest()["sources"].items()}
+    found, errors = {}, []  # the log line must be written even when a source cannot be resolved
+    try:
+        roles = list(brand_sources.load_config().get("files", {}))
     except Exception as e:
-        entry["sources_error"] = str(e)
+        roles, errors = [], [str(e)]
+    for role in roles:  # one role at a time, so a package holding one template still records what it used
+        try:
+            found[role] = brand_sources.resolve([role])[role]["version"]
+        except Exception as e:
+            errors.append(str(e))
+    if found:
+        entry["sources"] = found
+    if errors:
+        entry["sources_error"] = " ".join(errors)
     entry.update(output=output, layouts_used=list(layouts_used or []), notes=notes, **extra)
     path = log_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)

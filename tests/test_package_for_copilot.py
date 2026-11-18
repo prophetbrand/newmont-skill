@@ -101,7 +101,7 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(len(heads), len(pkg.KEEP))
         for head, key in zip(heads, pkg.KEEP):
             self.assertTrue(head.startswith(key), head)
-        for gone in ("## How a request flows", "## Restyling", "## Other formats", "Example. \"put together",
+        for gone in ("## How a request flows", "Not in this package", "Example. \"put together",
                      "pip install", "**Setup check**"):
             self.assertNotIn(gone, skill)
         self.assertIn("sys.path.insert(0, 'scripts')  # this skill's scripts/", skill)
@@ -110,6 +110,10 @@ class PackageTest(unittest.TestCase):
         self.assertIn("| `Two Column Comparison`", moved)
         self.assertIn("**Colour.**", moved)
         self.assertIn("## Reply format", moved)
+        self.assertIn("## Restyling an existing deck", moved)
+        self.assertIn("## Other formats", moved)
+        self.assertIn("--nm-pale:#D9E8EC", moved)
+        self.assertIn("## Other formats", skill)
         self.assertNotIn("End every reply with", skill.split("## Reply format")[1][:400])
 
     def test_resolve_from_extracted_zip(self):
@@ -194,6 +198,76 @@ class RealSourcesTest(unittest.TestCase):
                 self.assertLess(len(z.read("SKILL.md").decode("utf-8")), 20_000)
                 self.assertTrue(all(i.file_size < 25_000_000 for i in z.infolist()))
             self.assertLess(os.path.getsize(out), 50_000_000)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+class StudioProfileTest(unittest.TestCase):
+    def test_copilot_studio_profile_templates_with_derived_notes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = os.path.join(tmp, "src"); os.makedirs(src)
+            make_pdf(os.path.join(src, "Brand Guidelines October 2025.pdf"))
+            make_pptx(os.path.join(src, "Newmont_PPT Template_Executive Summary_Feb_2026.pptx"))
+            make_pptx(os.path.join(src, DV_NAME))
+            with open(os.path.join(ROOT, "brand-sources.json"), encoding="utf-8") as f:
+                cfg = json.load(f)
+            cfg.update(sources_dir=src, values_file=os.path.join(ROOT, "brand-values.json"))
+            config = os.path.join(tmp, "brand-sources.json")
+            with open(config, "w", encoding="utf-8") as f:
+                json.dump(cfg, f)
+            out = os.path.join(tmp, "studio.zip")
+            r = run_packager(out, config, "--template", "executive_summary", "--profile", "copilot-studio")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("members:", r.stdout)
+            self.assertIn("downsampled images", r.stderr)
+            with zipfile.ZipFile(out) as z:
+                skill = z.read("SKILL.md").decode("utf-8")
+                packed_cfg = json.loads(z.read("brand-sources.json").decode("utf-8"))
+                self.assertFalse(any(DV_NAME in n for n in z.namelist()))
+            approved_shas = {r: brand_sources.sha256(os.path.join(src, n))[:12] for r, n in (
+                ("guidelines", "Brand Guidelines October 2025.pdf"),
+                ("executive_summary", "Newmont_PPT Template_Executive Summary_Feb_2026.pptx"))}
+            self.assertIn("Brand Identity Guidelines is a derived copy", skill)
+            self.assertIn("Executive Summary is a derived copy", skill)
+            self.assertIn("reports the approved sha", skill)
+            for role, approved in approved_shas.items():
+                self.assertEqual(packed_cfg["files"][role].get("approved_sha256_12"), approved, role)
+            self.assertNotIn("approved_sha256_12", packed_cfg["files"]["detailed_view"])
+            both = run_packager(os.path.join(tmp, "both.zip"), config, "--profile", "copilot-studio")
+            self.assertEqual(both.returncode, 0, both.stderr)
+            with zipfile.ZipFile(os.path.join(tmp, "both.zip")) as z:
+                self.assertIn("brand-sources/" + DV_NAME, z.namelist())
+                self.assertIn("Detailed View is a derived copy", z.read("SKILL.md").decode("utf-8"))
+
+    def test_strip_picture_originals(self):
+        layout = ('<p:sldLayout xmlns:a="a" xmlns:r="r"><p:pic><a:blip r:embed="rId2"><a:extLst><a:ext uri="x">'
+                  '<a14:imgProps><a14:imgLayer r:embed="rId3"/></a14:imgProps></a:ext></a:extLst></a:blip></p:pic>'
+                  '<a:extLst><a:ext uri="keep"/></a:extLst></p:sldLayout>')
+        rels = ('<Relationships><Relationship Id="rId2" Type="image" Target="../media/image1.jpeg"/>'
+                '<Relationship Id="rId3" Type="hdphoto" Target="../media/hdphoto1.wdp"/></Relationships>')
+        types = ('<Types><Default Extension="wdp" ContentType="image/vnd.ms-photo"/>'
+                 '<Default Extension="xml" ContentType="application/xml"/></Types>')
+        with tempfile.TemporaryDirectory() as tmp:
+            src, dst = os.path.join(tmp, "src.pptx"), os.path.join(tmp, "dst.pptx")
+            with zipfile.ZipFile(src, "w") as z:
+                z.writestr("[Content_Types].xml", types)
+                z.writestr("ppt/slideLayouts/slideLayout1.xml", layout)
+                z.writestr("ppt/slideLayouts/_rels/slideLayout1.xml.rels", rels)
+                z.writestr("ppt/media/hdphoto1.wdp", b"x" * 100)
+            self.assertEqual(pkg.strip_picture_originals(src, dst), os.path.getsize(dst))
+            with zipfile.ZipFile(dst) as z:
+                self.assertNotIn("ppt/media/hdphoto1.wdp", z.namelist())
+                out_rels = z.read("ppt/slideLayouts/_rels/slideLayout1.xml.rels").decode("utf-8")
+                out_layout = z.read("ppt/slideLayouts/slideLayout1.xml").decode("utf-8")
+                out_types = z.read("[Content_Types].xml").decode("utf-8")
+        self.assertNotIn("hdphoto1.wdp", out_rels)
+        self.assertIn('Id="rId2"', out_rels)
+        self.assertNotIn("imgProps", out_layout)
+        self.assertIn('r:embed="rId2"', out_layout)
+        self.assertIn('<a:extLst><a:ext uri="keep"/></a:extLst>', out_layout)
+        self.assertNotIn('Extension="wdp"', out_types)
+        self.assertIn('Extension="xml"', out_types)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,17 @@ class SourcesTest(unittest.TestCase):
                    os.path.join(self.dir, "Brand Guidelines.pdf"))
         self.assertTrue(brand_sources.resolve(["guidelines"])["guidelines"]["version"].startswith("October 2025 "))
 
+    def test_describe_reports_approved_sha_for_derived_copy(self):
+        path = os.path.join(self.dir, "Newmont_PPT Template_Executive Summary_Feb_2026.pptx")
+        plain = brand_sources.describe("executive_summary", {"kind": "pptx"}, path)
+        own = plain["sha256_12"]
+        self.assertNotIn("copy_sha256_12", plain)
+        self.assertEqual(plain["version"], "Feb 2026 (sha %s)" % own)
+        d = brand_sources.describe("executive_summary", {"kind": "pptx", "approved_sha256_12": "abcdef012345"}, path)
+        self.assertEqual(d["sha256_12"], "abcdef012345")
+        self.assertEqual(d["copy_sha256_12"], own)
+        self.assertEqual(d["version"], "Feb 2026 (approved sha abcdef012345; derived copy sha %s)" % own)
+
     def test_role_subset_and_manifest(self):
         m = brand_sources.manifest(["detailed_view"])
         self.assertEqual(list(m["sources"]), ["detailed_view"])
@@ -156,3 +167,20 @@ class TestEnvRelativeToCwd(unittest.TestCase):
                 self.assertEqual(brand_sources.load_config()["sources_dir"], os.path.join(os.path.realpath(d), "empty"))
             finally:
                 os.chdir(old); os.environ.pop("NEWMONT_BRAND_SOURCES", None)
+
+class NoPymupdfTest(unittest.TestCase):
+    def test_pdf_edition_from_filename_when_pymupdf_missing(self):
+        import builtins, brand_sources
+        real=builtins.__import__
+        def fake(name,*a,**k):
+            if name=="pymupdf": raise ImportError("no pymupdf")
+            return real(name,*a,**k)
+        with tempfile.TemporaryDirectory() as d:
+            make_pdf(os.path.join(d,"Brand Guidelines October 2025.pdf"))
+            make_pptx(os.path.join(d,"Newmont_PPT Template_Detailed View_Feb_2026.pptx"))
+            make_pptx(os.path.join(d,"Newmont_PPT Template_Executive Summary_Feb_2026.pptx"))
+            with mock.patch.dict(os.environ,{"NEWMONT_BRAND_SOURCES":d}), mock.patch.object(builtins,"__import__",fake):
+                got=brand_sources.resolve(["guidelines"])
+        self.assertEqual(got["guidelines"]["edition"],"October 2025")
+        self.assertIsNone(got["guidelines"]["title"])
+

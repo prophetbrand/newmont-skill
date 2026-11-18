@@ -55,6 +55,16 @@ class LogTest(unittest.TestCase):
         self.assertTrue(b["clarifying_question_asked"])
         self.assertEqual([e["request"] for e in brand_log.tail(1)], ["b"])
 
+    def test_one_template_present_records_found_sources(self):
+        make_pdf(os.path.join(self.src, "Brand Guidelines October 2025.pdf"))
+        make_pptx(os.path.join(self.src, "X_Template_Detailed View_Feb_2026.pptx"))
+        brand_log.log_request(request="one template", activated=True, template="detailed_view")
+        e = self.lines()[0]
+        self.assertEqual(sorted(e["sources"]), ["detailed_view", "guidelines"])
+        self.assertTrue(e["sources"]["guidelines"].startswith("October 2025 (sha "))
+        self.assertIn("executive_summary", e["sources_error"])
+        self.assertNotIn("detailed_view", e["sources_error"])
+
     def test_rebuild_replaces_last_line(self):
         brand_log.log_request(request="a", output="/x/a.pptx", notes="first")
         brand_log.log_request(request="b", output="/x/b.pptx", notes="first")

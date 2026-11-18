@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+import json, socket, sys
+s = socket.create_connection(('127.0.0.1', 8765), timeout=120)
+s.sendall((json.dumps({'op': sys.argv[1], 'args': sys.argv[2:]}) + '\n').encode())
+buf = b''
+while not buf.endswith(b'\n'):
+    c = s.recv(65536)
+    if not c: break
+    buf += c
+r = json.loads(buf.decode())
+print(r['out'] if r['ok'] else 'ERROR ' + r['err'])

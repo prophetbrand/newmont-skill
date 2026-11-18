@@ -29,7 +29,7 @@ Cover photos are baked into the layouts (free shapes); choose by photo.
 | `Big statement with image - Light` | Variant: pale blue-grey background | 10; 11 | as above | 36, 39 |
 | `Big statement with image - Dark Blue` | Variant: dark-blue background | 10; 11 | as above | 37, 40 |
 
-`Statement` and `Story / Summary` carry a 12pt title placeholder (idx 0) positioned above the slide (top -35pt): it is invisible, so fill it only for accessibility/outline.
+`Statement` and `Story / Summary` carry a 12pt title placeholder (idx 0) positioned above the slide (top -35pt): it is invisible, so fill it only for accessibility/outline. Anything the person must see, such as a label like DECISION REQUESTED, goes in the body as its first line, never in that title.
 
 ## Content (columns and panels)
 | Layout | For | Placeholders to fill | Content limits | Samples |

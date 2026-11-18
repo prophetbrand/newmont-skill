@@ -13,3 +13,5 @@ out/demo-*.pdf
 out/*.run.json
 dist/
 screen-use-run/
+tools/copilot-studio/profile/
+tools/copilot-studio/pwsrv.log

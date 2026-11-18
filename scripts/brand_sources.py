@@ -90,7 +90,10 @@ def doc_info(path, kind):
             m = re.search(r"<dc:title>(.*?)</dc:title>", xml, re.S)
             return (m.group(1).strip() if m else None), None
         if kind == "pdf":
-            import pymupdf
+            try:
+                import pymupdf
+            except ImportError:  # sandboxes without pymupdf: edition comes from the file name, the sha still logs
+                return None, None
             with pymupdf.open(path) as d:
                 return (d.metadata or {}).get("title") or None, edition(d[0].get_text() if d.page_count else "")
     except Exception as e:  # unreadable file is a loud error, not a silent fallback
@@ -102,10 +105,15 @@ def describe(role, spec, path):
     title, ed = doc_info(path, spec.get("kind"))
     ed = ed or edition(os.path.basename(path)) or "unknown edition"
     st, sha = os.stat(path), sha256(path)[:12]
-    return {"role": role, "label": spec.get("label", role), "path": path, "file_name": os.path.basename(path),
-            "title": title if (title or "").strip().lower() not in GENERIC_TITLES else None,
-            "version": "%s (sha %s)" % (ed, sha), "edition": ed, "sha256_12": sha, "size": st.st_size,
-            "modified": datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(timespec="seconds")}
+    approved = spec.get("approved_sha256_12")  # set by the packager on a derived (trimmed) copy
+    out = {"role": role, "label": spec.get("label", role), "path": path, "file_name": os.path.basename(path),
+           "title": title if (title or "").strip().lower() not in GENERIC_TITLES else None,
+           "version": "%s (sha %s)" % (ed, sha), "edition": ed, "sha256_12": sha, "size": st.st_size,
+           "modified": datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc).isoformat(timespec="seconds")}
+    if approved:
+        out.update(version="%s (approved sha %s; derived copy sha %s)" % (ed, approved, sha), sha256_12=approved,
+                   copy_sha256_12=sha)
+    return out
 
 
 def resolve(roles=None, cfg=None):
